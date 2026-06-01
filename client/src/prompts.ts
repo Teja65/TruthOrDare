@@ -1,0 +1,117 @@
+export type Category = "Normal" | "Funny" | "Friends" | "Couples" | "Spicy";
+export type PromptType = "truth" | "dare";
+
+export const categories: Category[] = ["Normal", "Funny", "Friends", "Couples", "Spicy"];
+
+export const prompts: Record<Category, Record<PromptType, string[]>> = {
+  Normal: {
+    truth: [
+      "What is one habit you want to improve this month?",
+      "What is a small thing that instantly makes your day better?",
+      "What is the last thing you searched online?",
+      "What is something you are proud of but rarely mention?",
+      "What is one rule you broke as a kid?",
+      "What is your most used app right now?",
+      "What is a food you will never get bored of?",
+      "What is one thing you wish you learned earlier?",
+    ],
+    dare: [
+      "Do ten jumping jacks.",
+      "Speak in a movie trailer voice until your next turn.",
+      "Let the group pick a word you cannot say for two rounds.",
+      "Take a dramatic selfie.",
+      "Balance something safe on your head for ten seconds.",
+      "Do your best dance move for fifteen seconds.",
+      "Say the alphabet backward as far as you can.",
+      "Compliment every player in one sentence.",
+    ],
+  },
+  Funny: {
+    truth: [
+      "What is the funniest excuse you have ever used?",
+      "What is a silly fear you still have?",
+      "What is the most embarrassing song you secretly like?",
+      "What is the weirdest dream you remember?",
+      "What is your funniest autocorrect mistake?",
+      "What is something ridiculous you believed as a child?",
+      "What is your worst cooking fail?",
+      "What would your warning label say?",
+    ],
+    dare: [
+      "Talk like a robot for one minute.",
+      "Make the group laugh without using words.",
+      "Pretend to host a cooking show for thirty seconds.",
+      "Do an impression of a famous person.",
+      "Invent a handshake with the player on your left.",
+      "Sing your next sentence.",
+      "Act like you just won an award.",
+      "Give a weather report for this room.",
+    ],
+  },
+  Friends: {
+    truth: [
+      "Who here knows you best?",
+      "What is your favorite memory with this group?",
+      "Who here would survive best on a road trip?",
+      "What is one thing you admire about the player on your right?",
+      "Who is most likely to become famous?",
+      "What is one secret talent you have?",
+      "What is the kindest thing a friend has done for you?",
+      "Who here gives the best advice?",
+    ],
+    dare: [
+      "Let another player choose your profile pose.",
+      "Swap seats with someone and imitate them kindly for twenty seconds.",
+      "Send a wholesome text to a friend not in the room.",
+      "Give the group a team name.",
+      "Create a two-line chant for the group.",
+      "Let the group choose a harmless nickname for you this round.",
+      "Do a slow-motion high five with someone.",
+      "Draw a quick portrait of another player.",
+    ],
+  },
+  Couples: {
+    truth: [
+      "What is your favorite shared memory?",
+      "What small gesture makes you feel cared for?",
+      "What was your first impression of your partner?",
+      "What date idea would you plan next?",
+      "What is a song that reminds you of your partner?",
+      "What is something your partner does that makes you smile?",
+      "What is one dream you want to build together?",
+      "What is your favorite compliment to receive?",
+    ],
+    dare: [
+      "Give your partner a sincere compliment.",
+      "Plan a thirty-second imaginary vacation together.",
+      "Hold eye contact for ten seconds.",
+      "Recreate your first hello.",
+      "Let your partner pick your next dare category.",
+      "Say three things you appreciate about your partner.",
+      "Take a cute photo together.",
+      "Create a tiny secret handshake.",
+    ],
+  },
+  Spicy: {
+    truth: [
+      "What is your biggest confidence boost?",
+      "What is the boldest compliment you have received?",
+      "What is your favorite kind of flirt?",
+      "What makes someone instantly attractive to you?",
+      "What is your most charming quality?",
+      "What is a harmless crush story you can share?",
+      "What is your best date-night outfit?",
+      "What is a romantic scene you secretly love?",
+    ],
+    dare: [
+      "Give your best confident walk across the room.",
+      "Say a cheesy pickup line with full confidence.",
+      "Let the group rate your wink attempt.",
+      "Describe your dream date in fifteen seconds.",
+      "Pose like a magazine cover.",
+      "Send a flirty but respectful compliment to your partner or skip safely.",
+      "Whisper a movie quote dramatically.",
+      "Give yourself a bold compliment out loud.",
+    ],
+  },
+};
