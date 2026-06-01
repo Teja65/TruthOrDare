@@ -12,7 +12,10 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   const toggleTheme = () => {
     setIsDark(!isDark);
-    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    document.documentElement.setAttribute(
+      'data-theme',
+      isDark ? 'light' : 'dark',
+    );
   };
 
   return (
@@ -28,10 +31,20 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
         </Link>
         <nav className='nav-links'>
-          <Link to='/' className='nav-link'>Home</Link>
-          <Link to='/create' className='nav-link'>Create Room</Link>
-          <Link to='/join' className='nav-link'>Join Room</Link>
-          <button className='theme-toggle' onClick={toggleTheme} title='Toggle theme'>
+          <Link to='/' className='nav-link'>
+            Home
+          </Link>
+          <Link to='/create' className='nav-link'>
+            Create Room
+          </Link>
+          <Link to='/join' className='nav-link'>
+            Join Room
+          </Link>
+          <button
+            className='theme-toggle'
+            onClick={toggleTheme}
+            title='Toggle theme'
+          >
             {isDark ? <Sun size={20} /> : <Moon size={20} />}
           </button>
         </nav>
