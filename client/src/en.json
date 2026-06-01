@@ -1,15 +1,16 @@
 {
   "app": {
     "title": "Truth or Dare",
-    "subtitle": "Party mode in dark theme",
+    "subtitle": "Professional dark theme",
     "description": "Create and join game rooms, then play truth or dare with friends.",
     "brand": "TruthOrDare"
   },
   "homePage": {
-    "headline": "Gather your players and start the party.",
-    "summary": "Choose a room flow, invite friends, and enjoy a simple dark theme game experience.",
-    "createRoom": "Create room",
-    "joinRoom": "Join room",
+    "headline": "Ready for a night of truth, dares, and laughter?",
+    "intro": "Truth or Dare is the ultimate party game to break the ice and create unforgettable moments with friends. Select from 5 unique categories, complete hilarious challenges, and track the leaderboard. Host a game in seconds or join an existing room with just a room code.",
+    "summary": "Choose a room flow, invite friends, and enjoy an immersive dark theme game experience.",
+    "createRoom": "Create Room",
+    "joinRoom": "Join Room",
     "learnMore": "How it works"
   },
   "createRoomPage": {
