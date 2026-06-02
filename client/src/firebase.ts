@@ -11,10 +11,13 @@ import {
 } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: 'AIzaSyAt9acDz4XC7AieEjcFgNoCNQBhGhnY8ZY',
+  authDomain: 'truthordare-d53f9.firebaseapp.com',
+  projectId: 'truthordare-d53f9',
+  storageBucket: 'truthordare-d53f9.firebasestorage.app',
+  messagingSenderId: '1011331447207',
+  appId: '1:1011331447207:web:cfd59837368aa7a5a85e82',
+  measurementId: 'G-934S5VSSCM',
 };
 
 export const hasFirebaseConfig = Object.values(firebaseConfig).every(Boolean);

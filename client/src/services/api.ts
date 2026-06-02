@@ -1,13 +1,18 @@
 import { getJwtToken } from '../firebase';
+import { getStoredAuthToken } from './authService';
+import { AUTH_STORAGE_KEY } from '../utils/constants';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export async function fetchWithJwt(input: RequestInfo, init?: RequestInit) {
-  const token = await getJwtToken();
-  const headers = new Headers(init?.headers ?? {});
+  // Prefer backend-issued JWT stored in localStorage
+  const stored = getStoredAuthToken();
+  const idTokenFallback = await getJwtToken();
+  const tokenToUse = stored ?? idTokenFallback;
 
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+  const headers = new Headers(init?.headers ?? {});
+  if (tokenToUse) {
+    headers.set('Authorization', `Bearer ${tokenToUse}`);
   }
 
   const response = await fetch(

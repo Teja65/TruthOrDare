@@ -59,6 +59,8 @@
   "form": {
     "placeholderRoomCode": "Enter room code",
     "placeholderName": "Type a name",
+    "placeholderEmail": "you@example.com",
+    "placeholderPassword": "Password",
     "submit": "Submit"
   },
   "buttons": {

@@ -1,21 +1,26 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import translations from '../en.json';
+import { useAuth } from '../contexts/AuthContext';
 
 type MainLayoutProps = {
   children: ReactNode;
 };
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const { user, signOut } = useAuth();
   const [isDark, setIsDark] = useState(true);
 
-  const toggleTheme = () => {
-    setIsDark(!isDark);
+  useEffect(() => {
     document.documentElement.setAttribute(
       'data-theme',
-      isDark ? 'light' : 'dark',
+      isDark ? 'dark' : 'light',
     );
+  }, [isDark]);
+
+  const toggleTheme = () => {
+    setIsDark((value) => !value);
   };
 
   return (
@@ -25,7 +30,6 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className='brand-content'>
             <i className='fas fa-fire brand-icon'></i>
             <div>
-              <p className='eyebrow'>{translations.app.subtitle}</p>
               <h1>{translations.app.title}</h1>
             </div>
           </div>
@@ -40,10 +44,24 @@ export function MainLayout({ children }: MainLayoutProps) {
           <Link to='/join' className='nav-link'>
             Join Room
           </Link>
+          {user ? (
+            <button
+              type='button'
+              className='button secondary nav-action'
+              onClick={signOut}
+            >
+              {translations.auth.signOut}
+            </button>
+          ) : (
+            <Link to='/login' className='button secondary nav-action'>
+              {translations.auth.signIn}
+            </Link>
+          )}
           <button
-            className='theme-toggle'
+            className='button theme-toggle'
             onClick={toggleTheme}
             title='Toggle theme'
+            aria-label='Toggle theme'
           >
             {isDark ? <Sun size={20} /> : <Moon size={20} />}
           </button>
@@ -51,10 +69,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       </header>
       <main className='page-content'>{children}</main>
       <footer className='footer'>
-        <span>
-          <i className='fas fa-gamepad'></i> {translations.app.brand}
-        </span>
-        <span>Professional dark theme · Firebase + JWT auth</span>
+        <span>{translations.app.brand}</span>
       </footer>
     </div>
   );

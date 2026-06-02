@@ -7,40 +7,49 @@
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  background: #0a1428;
-  color: #f0f4f8;
+  background: #08101d;
+  color: #e7eefc;
   font-size: 16px;
   line-height: 1.6;
-  --bg: #0a1428;
-  --surface: #1a2a3a;
-  --surface-strong: #243a50;
-  --surface-muted: #141f2d;
-  --text: #f0f4f8;
-  --text-secondary: #b4c0d0;
-  --muted: #8a9aaa;
-  --border: rgba(255, 255, 255, 0.1);
-  --primary: #6366f1;
-  --primary-strong: #4f46e5;
-  --primary-light: #818cf8;
-  --accent: #10b981;
-  --accent-light: #34d399;
+  --bg: #08101d;
+  --surface: #121d2f;
+  --surface-strong: #18263b;
+  --surface-muted: #0d1320;
+  --text: #e7eefc;
+  --text-secondary: #9fb1cb;
+  --muted: #7e8da4;
+  --border: rgba(255, 255, 255, 0.08);
+  --primary: #6d72ff;
+  --primary-strong: #4f52db;
+  --primary-light: #8d93ff;
+  --accent: #22c5b9;
+  --accent-light: #64e7d4;
   --danger: #ef4444;
   --warning: #f59e0b;
   --success: #10b981;
+  --overlay-primary: rgba(109, 114, 255, 0.08);
+  --overlay-accent: rgba(34, 197, 185, 0.07);
 }
 
 [data-theme='light'] {
-  --bg: #ffffff;
-  --surface: #f8f9fa;
-  --surface-strong: #e9ecef;
-  --surface-muted: #f5f6f7;
-  --text: #1a1d23;
-  --text-secondary: #4b5563;
-  --muted: #6b7684;
-  --border: rgba(0, 0, 0, 0.1);
-  --primary: #4f46e5;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-strong: #eef2ff;
+  --surface-muted: #f3f4f6;
+  --text: #111827;
+  --text-secondary: #475569;
+  --muted: #64748b;
+  --border: rgba(15, 23, 42, 0.08);
+  --primary: #4338ca;
   --primary-strong: #4338ca;
-  --primary-light: #6366f1;
+  --primary-light: #818cf8;
+  --accent: #0f766e;
+  --accent-light: #2dd4bf;
+  --danger: #dc2626;
+  --warning: #f59e0b;
+  --success: #16a34a;
+  --overlay-primary: rgba(67, 56, 202, 0.085);
+  --overlay-accent: rgba(15, 118, 110, 0.07);
 }
 
 * {
@@ -56,16 +65,8 @@ body,
 body {
   margin: 0;
   background:
-    radial-gradient(
-      circle at 20% 50%,
-      rgba(99, 102, 241, 0.08),
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 80% 80%,
-      rgba(16, 185, 129, 0.06),
-      transparent 50%
-    ),
+    radial-gradient(circle at 15% 20%, var(--overlay-primary), transparent 35%),
+    radial-gradient(circle at 85% 85%, var(--overlay-accent), transparent 30%),
     var(--bg);
   color: var(--text);
   transition:
@@ -98,9 +99,9 @@ a {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  background: rgba(10, 20, 40, 0.95);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  background: var(--surface-strong);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -160,7 +161,7 @@ a {
 .nav-link {
   padding: 0.75rem 1.25rem;
   border-radius: 8px;
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text);
   font-size: 0.95rem;
   font-weight: 500;
@@ -168,28 +169,55 @@ a {
 }
 
 .nav-link:hover {
-  background: rgba(99, 102, 241, 0.2);
+  background: rgba(255, 255, 255, 0.12);
   transform: translateY(-2px);
 }
 
 .theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
-  cursor: pointer;
-  transition: all 0.2s ease;
+  min-width: auto;
+  min-height: auto;
+  width: auto;
+  height: auto;
   padding: 0;
 }
 
-.theme-toggle:hover {
-  background: rgba(99, 102, 241, 0.2);
-  transform: rotate(20deg);
+.button.theme-toggle {
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.95rem 1rem;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.button.theme-toggle:hover,
+.button.theme-toggle:active {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(34, 45, 80, 0.15);
+}
+
+.nav-action {
+  min-width: 110px;
+}
+
+.auth-section {
+  justify-items: center;
+  align-items: center;
+}
+
+.auth-card {
+  width: min(540px, 100%);
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.form-stack {
+  display: grid;
+  gap: 1rem;
 }
 
 .page-content {
@@ -214,7 +242,7 @@ a {
 .question-card,
 .feature-card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(128, 138, 150, 0.18);
   border-radius: 1.25rem;
   padding: 1.5rem;
   transition: all 0.3s ease;
@@ -293,21 +321,21 @@ a {
 .button:hover,
 .button:active {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 20px rgba(34, 45, 80, 0.24);
 }
 
 .button.secondary,
 .secondary-button,
 .button.ghost {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  border: 1px solid var(--border);
 }
 
 .button.secondary:hover,
 .secondary-button:hover {
-  background: rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 0.6);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--primary-light);
 }
 
 .modal-close:hover,
@@ -459,7 +487,7 @@ a {
   width: 100%;
   padding: 1rem 2rem;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   color: var(--muted);
   border-top: 1px solid var(--border);
 }
