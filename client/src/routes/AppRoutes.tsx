@@ -5,6 +5,7 @@ import { CreateRoomPage } from '../pages/CreateRoom/CreateRoomPage';
 import { JoinRoomPage } from '../pages/JoinRoom/JoinRoomPage';
 import { GameRoomPage } from '../pages/GameRoom/GameRoomPage';
 import { NotFoundPage } from '../pages/NotFound/NotFoundPage';
+import { LoginPage } from '../pages/Auth/LoginPage';
 
 export function AppRoutes() {
   return (
@@ -31,6 +32,14 @@ export function AppRoutes() {
           element={
             <MainLayout>
               <JoinRoomPage />
+            </MainLayout>
+          }
+        />
+        <Route
+          path='/login'
+          element={
+            <MainLayout>
+              <LoginPage />
             </MainLayout>
           }
         />
