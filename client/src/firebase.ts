@@ -9,6 +9,7 @@ import {
   type Auth,
   type User,
 } from 'firebase/auth';
+import translations from './en.json';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAt9acDz4XC7AieEjcFgNoCNQBhGhnY8ZY',
@@ -35,7 +36,7 @@ export const googleProvider = new GoogleAuthProvider();
 
 export async function createUser(email: string, password: string) {
   if (!auth) {
-    throw new Error('Firebase is not configured.');
+    throw new Error(translations.auth.firebaseMissing);
   }
 
   return createUserWithEmailAndPassword(auth, email, password);
@@ -43,7 +44,7 @@ export async function createUser(email: string, password: string) {
 
 export async function signInUser(email: string, password: string) {
   if (!auth) {
-    throw new Error('Firebase is not configured.');
+    throw new Error(translations.auth.firebaseMissing);
   }
 
   return signInWithEmailAndPassword(auth, email, password);
@@ -51,7 +52,7 @@ export async function signInUser(email: string, password: string) {
 
 export async function signInWithGoogle() {
   if (!auth) {
-    throw new Error('Firebase is not configured.');
+    throw new Error(translations.auth.firebaseMissing);
   }
 
   return signInWithPopup(auth, googleProvider);

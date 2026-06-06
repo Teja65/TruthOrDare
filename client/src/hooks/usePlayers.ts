@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Player } from '../types/Player';
+import translations from '../en.json';
 
 const starterPlayers: Player[] = [
-  { id: crypto.randomUUID(), name: 'Player 1', score: 0 },
-  { id: crypto.randomUUID(), name: 'Player 2', score: 0 },
+  { id: crypto.randomUUID(), name: translations.player.starterOne, score: 0 },
+  { id: crypto.randomUUID(), name: translations.player.starterTwo, score: 0 },
 ];
 
 export function usePlayers() {

@@ -2,23 +2,25 @@ import { Room } from '../models/Room';
 import { GameHistory } from '../models/GameHistory';
 import { Player } from '../models/Player';
 import { getRandomQuestion } from './question.service';
+import translations from '../en.json';
 
 export async function startGame(roomCode: string) {
   const room = await Room.findOne({
     roomCode: roomCode.toUpperCase(),
   }).populate('players');
   if (!room) {
-    throw new Error('Room not found');
+    throw new Error(translations.messages.roomNotFound);
   }
 
   if (!room.players.length) {
-    throw new Error('At least one player is required to start the game');
+    throw new Error(translations.messages.playerRequired);
   }
 
   room.status = 'active';
   room.gameState = {
     currentTurn: 1,
     currentPlayer: room.players[0]._id,
+    currentCategory: translations.categories[0] as any,
     scores: room.players.map((player: any) => ({
       player: player._id,
       score: player.score ?? 0,
@@ -34,7 +36,9 @@ function getNextPlayer(room: any) {
     return null;
   }
 
-  const currentPlayerId = room.gameState?.currentPlayer?.toString();
+  const currentPlayer = room.gameState?.currentPlayer;
+  const currentPlayerId =
+    currentPlayer?._id?.toString() ?? currentPlayer?.toString();
   const ids = room.players.map((item: any) => item._id.toString());
   const currentIndex = ids.indexOf(currentPlayerId);
   const nextIndex =
@@ -47,16 +51,16 @@ export async function nextTurn(roomCode: string) {
     roomCode: roomCode.toUpperCase(),
   }).populate('players');
   if (!room) {
-    throw new Error('Room not found');
+    throw new Error(translations.messages.roomNotFound);
   }
 
   if (room.status !== 'active') {
-    throw new Error('Game is not active');
+    throw new Error(translations.messages.gameInactive);
   }
 
   const nextPlayer = getNextPlayer(room);
   if (!nextPlayer) {
-    throw new Error('No players available for next turn');
+    throw new Error(translations.messages.nextTurnUnavailable);
   }
 
   const gameState: any =
@@ -69,25 +73,53 @@ export async function nextTurn(roomCode: string) {
   return room;
 }
 
-async function selectQuestion(roomCode: string, type: 'truth' | 'dare') {
+export async function selectCategory(roomCode: string, category: string) {
   const room = await Room.findOne({
     roomCode: roomCode.toUpperCase(),
-  }).populate('players');
+  }).populate('players').populate('gameState.currentPlayer');
   if (!room) {
-    throw new Error('Room not found');
-  }
-
-  if (room.status !== 'active') {
-    throw new Error('Game is not active');
-  }
-
-  const question = await getRandomQuestion(type);
-  if (!question) {
-    throw new Error(`No ${type} questions available`);
+    throw new Error(translations.messages.roomNotFound);
   }
 
   const gameState: any =
     room.gameState ?? (room.gameState = { currentTurn: 0, scores: [] } as any);
+  gameState.currentCategory = translations.categories.includes(category)
+    ? category
+    : translations.categories[0];
+  gameState.currentQuestion = undefined;
+
+  await room.save();
+  return room;
+}
+
+async function selectQuestion(
+  roomCode: string,
+  type: 'truth' | 'dare',
+  category?: string,
+) {
+  const room = await Room.findOne({
+    roomCode: roomCode.toUpperCase(),
+  }).populate('players').populate('gameState.currentPlayer');
+  if (!room) {
+    throw new Error(translations.messages.roomNotFound);
+  }
+
+  if (room.status !== 'active') {
+    throw new Error(translations.messages.gameInactive);
+  }
+
+  const gameState: any =
+    room.gameState ?? (room.gameState = { currentTurn: 0, scores: [] } as any);
+  const selectedCategory = translations.categories.includes(category ?? '')
+    ? category
+    : gameState.currentCategory ?? translations.categories[0];
+  gameState.currentCategory = selectedCategory;
+
+  const question = await getRandomQuestion(type, selectedCategory);
+  if (!question) {
+    throw new Error(translations.messages.questionUnavailable);
+  }
+
   gameState.currentQuestion = {
     questionId: question._id,
     type: question.type,
@@ -98,22 +130,22 @@ async function selectQuestion(roomCode: string, type: 'truth' | 'dare') {
   return room;
 }
 
-export function selectTruth(roomCode: string) {
-  return selectQuestion(roomCode, 'truth');
+export function selectTruth(roomCode: string, category?: string) {
+  return selectQuestion(roomCode, 'truth', category);
 }
 
-export function selectDare(roomCode: string) {
-  return selectQuestion(roomCode, 'dare');
+export function selectDare(roomCode: string, category?: string) {
+  return selectQuestion(roomCode, 'dare', category);
 }
 
 export async function skipTurn(roomCode: string) {
   const room = await Room.findOne({ roomCode: roomCode.toUpperCase() });
   if (!room) {
-    throw new Error('Room not found');
+    throw new Error(translations.messages.roomNotFound);
   }
 
   if (room.status !== 'active') {
-    throw new Error('Game is not active');
+    throw new Error(translations.messages.gameInactive);
   }
 
   const gameState: any =
@@ -123,16 +155,85 @@ export async function skipTurn(roomCode: string) {
   return room;
 }
 
+export async function completeTurn(roomCode: string, delta: number) {
+  const room = await Room.findOne({
+    roomCode: roomCode.toUpperCase(),
+  }).populate('players').populate('gameState.currentPlayer');
+  if (!room) {
+    throw new Error(translations.messages.roomNotFound);
+  }
+
+  if (room.status !== 'active') {
+    throw new Error(translations.messages.gameInactive);
+  }
+
+  const gameState: any =
+    room.gameState ?? (room.gameState = { currentTurn: 0, scores: [] } as any);
+  const currentPlayer = gameState.currentPlayer ?? room.players[0]?._id;
+  const currentPlayerId =
+    currentPlayer?._id?.toString() ?? currentPlayer?.toString();
+  const score = gameState.scores.find(
+    (item: any) => item.player?.toString() === currentPlayerId,
+  );
+
+  if (score) {
+    score.score += delta;
+  } else if (currentPlayerId) {
+    gameState.scores.push({ player: currentPlayerId, score: delta });
+  }
+
+  if (currentPlayerId) {
+    await Player.findByIdAndUpdate(currentPlayerId, { $inc: { score: delta } });
+  }
+
+  const nextPlayer = getNextPlayer(room);
+  gameState.currentPlayer = nextPlayer?._id ?? room.players[0]?._id;
+  gameState.currentTurn = (gameState.currentTurn || 0) + 1;
+  gameState.currentQuestion = undefined;
+
+  await room.save();
+  return Room.findOne({ roomCode: roomCode.toUpperCase() })
+    .populate('players')
+    .populate('gameState.currentPlayer');
+}
+
+export async function restartGame(roomCode: string) {
+  const room = await Room.findOne({
+    roomCode: roomCode.toUpperCase(),
+  }).populate('players').populate('gameState.currentPlayer');
+  if (!room) {
+    throw new Error(translations.messages.roomNotFound);
+  }
+
+  await Player.updateMany({ roomCode: room.roomCode }, { score: 0 });
+  room.status = 'active';
+  room.gameState = {
+    currentTurn: 1,
+    currentPlayer: room.players[0]?._id,
+    currentCategory: translations.categories[0] as any,
+    currentQuestion: undefined,
+    scores: room.players.map((player: any) => ({
+      player: player._id,
+      score: 0,
+    })),
+  } as any;
+
+  await room.save();
+  return Room.findOne({ roomCode: roomCode.toUpperCase() })
+    .populate('players')
+    .populate('gameState.currentPlayer');
+}
+
 export async function endGame(roomCode: string) {
   const room = await Room.findOne({
     roomCode: roomCode.toUpperCase(),
   }).populate('players');
   if (!room) {
-    throw new Error('Room not found');
+    throw new Error(translations.messages.roomNotFound);
   }
 
   if (room.status !== 'active') {
-    throw new Error('Game is not active');
+    throw new Error(translations.messages.gameInactive);
   }
 
   const scores = (room.gameState?.scores ?? []) as Array<{
@@ -160,7 +261,7 @@ export async function endGame(roomCode: string) {
     (player) => player.playerId.toString() === winnerScore.player?.toString(),
   ) || {
     playerId: null,
-    name: 'Unknown',
+    name: translations.messages.unknownPlayer,
     score: 0,
   };
 

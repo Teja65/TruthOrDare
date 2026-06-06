@@ -1,49 +1,122 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { categories } from '../utils/constants';
 import { prompts } from '../data/truthQuestions';
 import { darePrompts } from '../data/dareQuestions';
 import { Player } from '../types/Player';
-import { QuestionCategory } from '../types/Game';
+import { QuestionCategory, QuestionType } from '../types/Game';
+import translations from '../en.json';
+import {
+  chooseBackendPrompt,
+  completeBackendTurn,
+  getBackendRoom,
+  restartBackendGame,
+  setBackendCategory,
+} from '../features/room/roomApi';
 
-export function useGame() {
+export function useGame(roomCode?: string) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [category, setCategory] = useState<QuestionCategory>(
     categories[0] as QuestionCategory,
   );
   const [turnIndex, setTurnIndex] = useState(0);
-  const [activeType, setActiveType] = useState<'truth' | 'dare' | null>(null);
+  const [currentPlayerId, setCurrentPlayerId] = useState('');
+  const [activeType, setActiveType] = useState<QuestionType | null>(null);
   const [currentPrompt, setCurrentPrompt] = useState('');
+  const [isSpinning, setIsSpinning] = useState(false);
 
   const currentPlayer = useMemo(
     () =>
+      players.find((player) => player.id === currentPlayerId) ??
       players[turnIndex % Math.max(players.length, 1)] ?? {
         id: '',
-        name: 'Waiting',
+        name: translations.player.waiting,
         score: 0,
       },
-    [players, turnIndex],
+    [currentPlayerId, players, turnIndex],
   );
 
   function setPlayersFromRoom(roomPlayers: Player[]) {
     setPlayers(roomPlayers);
+    setCurrentPlayerId((current) => current || roomPlayers[0]?.id || '');
   }
 
-  function selectCategory(value: QuestionCategory) {
+  const refreshGame = useCallback(async () => {
+    if (!roomCode) return;
+
+    try {
+      const snapshot = await getBackendRoom(roomCode);
+      setPlayers(snapshot.room.players);
+      setCurrentPlayerId(snapshot.currentPlayerId);
+      setCategory(snapshot.category);
+      setActiveType(snapshot.activeType);
+      setCurrentPrompt(snapshot.currentPrompt);
+    } catch (error) {
+      return;
+    }
+  }, [roomCode]);
+
+  async function selectCategory(value: QuestionCategory) {
     setCategory(value);
     setActiveType(null);
     setCurrentPrompt('');
+
+    if (!roomCode) return;
+
+    try {
+      const snapshot = await setBackendCategory(roomCode, value);
+      setCategory(snapshot.category);
+      setActiveType(snapshot.activeType);
+      setCurrentPrompt(snapshot.currentPrompt);
+    } catch (error) {
+      return;
+    }
   }
 
-  function choosePrompt(type: 'truth' | 'dare') {
+  async function choosePrompt(type: QuestionType) {
+    setIsSpinning(true);
     setActiveType(type);
+
+    try {
+      if (roomCode) {
+        const snapshot = await chooseBackendPrompt(roomCode, type, category);
+        setPlayers(snapshot.room.players);
+        setCurrentPlayerId(snapshot.currentPlayerId);
+        setCategory(snapshot.category);
+        setActiveType(snapshot.activeType);
+        setCurrentPrompt(snapshot.currentPrompt);
+        return;
+      }
+    } catch (error) {
+      const collection = type === 'truth' ? prompts : darePrompts;
+      const list = collection[category] ?? [];
+      setCurrentPrompt(
+        list[Math.floor(Math.random() * list.length)] || '',
+      );
+      return;
+    } finally {
+      window.setTimeout(() => setIsSpinning(false), 500);
+    }
+
     const collection = type === 'truth' ? prompts : darePrompts;
     const list = collection[category] ?? [];
-    setCurrentPrompt(
-      list[Math.floor(Math.random() * list.length)] || 'Pick another category.',
-    );
+    setCurrentPrompt(list[Math.floor(Math.random() * list.length)] || '');
   }
 
-  function finishTurn(delta: number) {
+  async function finishTurn(delta: number) {
+    if (roomCode) {
+      try {
+        const snapshot = await completeBackendTurn(roomCode, delta);
+        setPlayers(snapshot.room.players);
+        setCurrentPlayerId(snapshot.currentPlayerId);
+        setCategory(snapshot.category);
+        setActiveType(snapshot.activeType);
+        setCurrentPrompt(snapshot.currentPrompt);
+        return;
+      } catch (error) {
+        return;
+      }
+    }
+
     setPlayers((current) =>
       current.map((player, index) =>
         index === turnIndex % current.length
@@ -56,7 +129,22 @@ export function useGame() {
     setCurrentPrompt('');
   }
 
-  function restartGame() {
+  async function restartGame() {
+    if (roomCode) {
+      try {
+        const snapshot = await restartBackendGame(roomCode);
+        setPlayers(snapshot.room.players);
+        setCurrentPlayerId(snapshot.currentPlayerId);
+        setCategory(snapshot.category);
+        setActiveType(snapshot.activeType);
+        setCurrentPrompt(snapshot.currentPrompt);
+        setTurnIndex(0);
+        return;
+      } catch (error) {
+        return;
+      }
+    }
+
     setPlayers((current) => current.map((player) => ({ ...player, score: 0 })));
     setTurnIndex(0);
     setActiveType(null);
@@ -69,7 +157,9 @@ export function useGame() {
     category,
     activeType,
     currentPrompt,
+    isSpinning,
     setPlayers: setPlayersFromRoom,
+    refreshGame,
     selectCategory,
     choosePrompt,
     finishTurn,

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as questionService from '../services/question.service';
+import translations from '../en.json';
 
 export async function getQuestions(req: Request, res: Response) {
   const questions = await questionService.getQuestions();
@@ -10,7 +11,7 @@ export async function getRandomQuestion(req: Request, res: Response) {
   const { type } = req.query;
   const question = await questionService.getRandomQuestion(type as 'truth' | 'dare');
   if (!question) {
-    return res.status(404).json({ message: 'No question found' });
+    return res.status(404).json({ message: translations.messages.questionUnavailable });
   }
   res.json(question);
 }
@@ -25,7 +26,7 @@ export async function updateQuestion(req: Request, res: Response) {
   const { questionId } = req.params;
   const question = await questionService.updateQuestion(questionId, req.body);
   if (!question) {
-    return res.status(404).json({ message: 'Question not found' });
+    return res.status(404).json({ message: translations.messages.questionNotFound });
   }
   res.json(question);
 }
@@ -34,7 +35,7 @@ export async function deleteQuestion(req: Request, res: Response) {
   const { questionId } = req.params;
   const question = await questionService.deleteQuestion(questionId);
   if (!question) {
-    return res.status(404).json({ message: 'Question not found' });
+    return res.status(404).json({ message: translations.messages.questionNotFound });
   }
-  res.json({ message: 'Question deleted' });
+  res.json({ message: translations.messages.questionDeleted });
 }

@@ -6,6 +6,8 @@ import { JoinRoomPage } from '../pages/JoinRoom/JoinRoomPage';
 import { GameRoomPage } from '../pages/GameRoom/GameRoomPage';
 import { NotFoundPage } from '../pages/NotFound/NotFoundPage';
 import { LoginPage } from '../pages/Auth/LoginPage';
+import { ProfilePage } from '../pages/Profile/ProfilePage';
+import { GuardedRoute } from './GuardedRoute';
 
 export function AppRoutes() {
   return (
@@ -23,7 +25,9 @@ export function AppRoutes() {
           path='/create'
           element={
             <MainLayout>
-              <CreateRoomPage />
+              <GuardedRoute>
+                <CreateRoomPage />
+              </GuardedRoute>
             </MainLayout>
           }
         />
@@ -31,7 +35,9 @@ export function AppRoutes() {
           path='/join'
           element={
             <MainLayout>
-              <JoinRoomPage />
+              <GuardedRoute>
+                <JoinRoomPage />
+              </GuardedRoute>
             </MainLayout>
           }
         />
@@ -44,10 +50,22 @@ export function AppRoutes() {
           }
         />
         <Route
-          path='/room'
+          path='/profile'
           element={
             <MainLayout>
-              <GameRoomPage />
+              <GuardedRoute>
+                <ProfilePage />
+              </GuardedRoute>
+            </MainLayout>
+          }
+        />
+        <Route
+          path='/room/:roomCode'
+          element={
+            <MainLayout>
+              <GuardedRoute>
+                <GameRoomPage />
+              </GuardedRoute>
             </MainLayout>
           }
         />

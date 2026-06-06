@@ -1,54 +1,120 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import translations from '../../en.json';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { useRoom } from '../../hooks/useRoom';
+import {
+  getFieldError,
+  joinRoomSchema,
+  playerNameSchema,
+  roomCodeSchema,
+} from '../../utils/validation';
 
 export function JoinRoomPage() {
   const navigate = useNavigate();
   const { joinRoom } = useRoom();
   const [roomCode, setRoomCode] = useState('');
   const [playerName, setPlayerName] = useState('');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({ roomCode: '', playerName: '', form: '' });
+  const [touched, setTouched] = useState({ roomCode: false, playerName: false });
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function validateRoomCode(value: string) {
+    const result = roomCodeSchema.safeParse(value);
+    setErrors((current) => ({
+      ...current,
+      roomCode: result.success ? '' : result.error.issues[0]?.message ?? '',
+      form: '',
+    }));
+  }
+
+  function validatePlayerName(value: string) {
+    const result = playerNameSchema.safeParse(value);
+    setErrors((current) => ({
+      ...current,
+      playerName: result.success ? '' : result.error.issues[0]?.message ?? '',
+      form: '',
+    }));
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!roomCode.trim() || !playerName.trim()) {
-      setError('Please enter both a room code and player name.');
+    const result = joinRoomSchema.safeParse({ roomCode, playerName });
+
+    if (!result.success) {
+      setErrors({
+        roomCode: getFieldError(result.error, 'roomCode') ?? '',
+        playerName: getFieldError(result.error, 'playerName') ?? '',
+        form: '',
+      });
       return;
     }
 
-    if (!joinRoom(roomCode.trim(), playerName.trim())) {
-      setError('Room code not found. Try another code.');
-      return;
+    setSubmitting(true);
+    try {
+      const room = await joinRoom(result.data.roomCode, result.data.playerName);
+      setErrors({ roomCode: '', playerName: '', form: '' });
+      toast.success(translations.toast.roomJoined);
+      navigate(`/room/${room.code}`);
+    } catch (error) {
+      setErrors({
+        roomCode: '',
+        playerName: '',
+        form: translations.form.errors.roomNotFound,
+      });
+      toast.error(translations.form.errors.roomNotFound);
+    } finally {
+      setSubmitting(false);
     }
-
-    setError('');
-    navigate('/room');
   }
 
   return (
-    <section className='page-section'>
-      <Card>
-        <h2>{translations.joinRoomPage.heading}</h2>
-        <p>{translations.joinRoomPage.description}</p>
-        <form className='form-stack' onSubmit={handleSubmit}>
+    <section className='page-section form-page'>
+      <Card className='form-card slim'>
+        <div className='form-hero'>
+          <h2>{translations.joinRoomPage.heading}</h2>
+          <p>{translations.joinRoomPage.description}</p>
+        </div>
+        <form className='form-stack form-panel' onSubmit={handleSubmit}>
           <Input
             label={translations.joinRoomPage.roomCode}
             placeholder={translations.form.placeholderRoomCode}
             value={roomCode}
-            onChange={(event) => setRoomCode(event.target.value)}
+            error={errors.roomCode}
+            onBlur={() => {
+              setTouched((current) => ({ ...current, roomCode: true }));
+              validateRoomCode(roomCode);
+            }}
+            onChange={(event) => {
+              setRoomCode(event.target.value);
+              if (touched.roomCode) {
+                validateRoomCode(event.target.value);
+              }
+            }}
           />
           <Input
             label={translations.joinRoomPage.yourName}
             placeholder={translations.form.placeholderName}
             value={playerName}
-            onChange={(event) => setPlayerName(event.target.value)}
+            error={errors.playerName}
+            onBlur={() => {
+              setTouched((current) => ({ ...current, playerName: true }));
+              validatePlayerName(playerName);
+            }}
+            onChange={(event) => {
+              setPlayerName(event.target.value);
+              if (touched.playerName) {
+                validatePlayerName(event.target.value);
+              }
+            }}
           />
-          {error && <p className='form-error'>{error}</p>}
-          <Button type='submit'>{translations.joinRoomPage.joinGame}</Button>
+          {errors.form && <p className='form-error'>{errors.form}</p>}
+          <Button type='submit' disabled={submitting}>
+            {translations.joinRoomPage.joinGame}
+          </Button>
         </form>
       </Card>
     </section>

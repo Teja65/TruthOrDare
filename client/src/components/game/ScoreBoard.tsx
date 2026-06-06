@@ -1,4 +1,5 @@
 import { Player } from '../../types/Player';
+import translations from '../../en.json';
 
 type ScoreBoardProps = {
   players: Player[];
@@ -12,7 +13,7 @@ export function ScoreBoard({ players }: ScoreBoardProps) {
   return (
     <div className='score-board'>
       <div className='section-heading'>
-        <p>Scoreboard</p>
+        <p>{translations.labels.scoreBoard}</p>
       </div>
       <div className='score-list'>
         {sortedPlayers.map((player, index) => (

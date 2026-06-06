@@ -36,6 +36,11 @@ const roomSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
+      currentCategory: {
+        type: String,
+        enum: ['Normal', 'Funny', 'Friends', 'Couples', 'Spicy'],
+        default: 'Normal',
+      },
       currentQuestion: {
         questionId: {
           type: mongoose.Schema.Types.ObjectId,
