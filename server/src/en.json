@@ -1,0 +1,35 @@
+{
+  "messages": {
+    "roomNotFound": "Room not found",
+    "gameRoomNotFound": "Game room not found",
+    "roomDeleted": "Room deleted",
+    "roomClosed": "Room closed because there are no players left",
+    "roomNamePrefix": "Room",
+    "gameInactive": "Game is not active",
+    "playerRequired": "At least one player is required to start the game",
+    "nextTurnUnavailable": "No players available for next turn",
+    "questionUnavailable": "No question found",
+    "questionNotFound": "Question not found",
+    "questionDeleted": "Question deleted",
+    "unknownPlayer": "Unknown",
+    "internalServerError": "Internal server error",
+    "serverStarted": "TruthOrDare backend listening on"
+  },
+  "categories": ["Normal", "Funny", "Friends", "Couples", "Spicy"],
+  "questions": {
+    "truths": {
+      "Normal": ["What is one habit you want to improve this month?"],
+      "Funny": ["What is the funniest excuse you have ever used?"],
+      "Friends": ["Who here knows you best?"],
+      "Couples": ["What is your favorite shared memory?"],
+      "Spicy": ["What is your biggest confidence boost?"]
+    },
+    "dares": {
+      "Normal": ["Do ten jumping jacks."],
+      "Funny": ["Talk like a robot for one minute."],
+      "Friends": ["Give the group a team name."],
+      "Couples": ["Give your partner a sincere compliment."],
+      "Spicy": ["Give your best confident walk across the room."]
+    }
+  }
+}

@@ -1,11 +1,10 @@
 import { getJwtToken } from '../firebase';
 import { getStoredAuthToken } from './authService';
-import { AUTH_STORAGE_KEY } from '../utils/constants';
+import translations from '../en.json';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export async function fetchWithJwt(input: RequestInfo, init?: RequestInit) {
-  // Prefer backend-issued JWT stored in localStorage
   const stored = getStoredAuthToken();
   const idTokenFallback = await getJwtToken();
   const tokenToUse = stored ?? idTokenFallback;
@@ -24,7 +23,25 @@ export async function fetchWithJwt(input: RequestInfo, init?: RequestInit) {
   );
 
   if (!response.ok) {
-    throw new Error(`API request failed with status ${response.status}`);
+    throw new Error(`${translations.api.requestFailed} ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers ?? {});
+  if (init?.body && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`${translations.api.requestFailed} ${response.status}`);
   }
 
   return response.json();

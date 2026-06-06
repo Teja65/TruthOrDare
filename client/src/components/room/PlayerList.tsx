@@ -1,6 +1,7 @@
 import { Player } from '../../types/Player';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
+import translations from '../../en.json';
 
 type PlayerListProps = {
   players: Player[];
@@ -27,7 +28,7 @@ export function PlayerList({
             type='button'
             onClick={() => onRemove(player.id)}
           >
-            Remove
+            {translations.player.remove}
           </Button>
         </div>
       ))}

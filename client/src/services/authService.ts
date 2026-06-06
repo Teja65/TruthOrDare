@@ -1,4 +1,5 @@
 import { AUTH_STORAGE_KEY } from '../utils/constants';
+import translations from '../en.json';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -10,7 +11,7 @@ export async function exchangeIdTokenForJwt(idToken: string) {
   });
 
   if (!res.ok) {
-    throw new Error(`Auth exchange failed (${res.status})`);
+    throw new Error(`${translations.auth.exchangeError} (${res.status})`);
   }
 
   const data = await res.json();

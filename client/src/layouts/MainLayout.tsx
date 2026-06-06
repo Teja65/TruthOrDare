@@ -1,16 +1,20 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Moon, Sun } from 'lucide-react';
+import toast from 'react-hot-toast';
 import translations from '../en.json';
 import { useAuth } from '../contexts/AuthContext';
+import menuDark from '../assests/menu-dark.svg';
+import menuLight from '../assests/menu-light.svg';
+import squareUser from '../assests/square-user.svg';
 
 type MainLayoutProps = {
   children: ReactNode;
 };
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const { user, signOut } = useAuth();
+  const { isAuthenticated, signOut } = useAuth();
   const [isDark, setIsDark] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute(
@@ -23,47 +27,73 @@ export function MainLayout({ children }: MainLayoutProps) {
     setIsDark((value) => !value);
   };
 
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
     <div className='app-shell'>
       <header className='topbar'>
-        <Link to='/' className='brand-link'>
+        <Link to='/' className='brand-link' onClick={closeMenu}>
           <div className='brand-content'>
-            <i className='fas fa-fire brand-icon'></i>
+            <span className='brand-icon' aria-hidden='true'>
+              TOD
+            </span>
             <div>
               <h1>{translations.app.title}</h1>
             </div>
           </div>
         </Link>
-        <nav className='nav-links'>
-          <Link to='/' className='nav-link'>
-            Home
-          </Link>
-          <Link to='/create' className='nav-link'>
-            Create Room
-          </Link>
-          <Link to='/join' className='nav-link'>
-            Join Room
-          </Link>
-          {user ? (
-            <button
-              type='button'
-              className='button secondary nav-action'
-              onClick={signOut}
-            >
-              {translations.auth.signOut}
-            </button>
+        <button
+          className={`menu-toggle ${isMenuOpen ? 'open' : ''}`}
+          type='button'
+          onClick={() => setIsMenuOpen((value) => !value)}
+          aria-label={
+            isMenuOpen ? translations.nav.closeMenu : translations.nav.openMenu
+          }
+          aria-expanded={isMenuOpen}
+        >
+          <img src={isDark ? menuLight : menuDark} alt='' />
+        </button>
+        <nav className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
+          {isAuthenticated ? (
+            <>
+              <Link to='/profile' className='nav-link profile-link' onClick={closeMenu}>
+                <img src={squareUser} alt='' />
+                {translations.nav.profile}
+              </Link>
+              <button
+                type='button'
+                className='nav-link nav-action'
+                onClick={() => {
+                  signOut();
+                  toast.success(translations.toast.signedOut);
+                  closeMenu();
+                }}
+              >
+                {translations.auth.signOut}
+              </button>
+            </>
           ) : (
-            <Link to='/login' className='button secondary nav-action'>
-              {translations.auth.signIn}
-            </Link>
+            <>
+              <Link to='/' className='nav-link' onClick={closeMenu}>
+                {translations.nav.home}
+              </Link>
+              <Link to='/login' className='nav-link nav-action' onClick={closeMenu}>
+                {translations.auth.signIn}
+              </Link>
+            </>
           )}
           <button
-            className='button theme-toggle'
-            onClick={toggleTheme}
-            title='Toggle theme'
-            aria-label='Toggle theme'
+            className='nav-link theme-toggle'
+            onClick={() => {
+              toggleTheme();
+              closeMenu();
+            }}
+            title={translations.nav.toggleTheme}
+            aria-label={translations.nav.toggleTheme}
           >
-            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            {isDark ? translations.nav.lightTheme : translations.nav.darkTheme}
           </button>
         </nav>
       </header>

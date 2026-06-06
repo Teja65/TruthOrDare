@@ -3,7 +3,17 @@
     "title": "Truth or Dare",
     "subtitle": "Professional dark theme",
     "description": "Create and join game rooms, then play truth or dare with friends.",
-    "brand": "TruthOrDare"
+    "brand": "TruthOrDare",
+    "loading": "Loading"
+  },
+  "nav": {
+    "home": "Home",
+    "profile": "Profile",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "toggleTheme": "Toggle theme",
+    "lightTheme": "Light",
+    "darkTheme": "Dark"
   },
   "homePage": {
     "headline": "Ready for a night of truth, dares, and laughter?",
@@ -11,7 +21,21 @@
     "summary": "Choose a room flow, invite friends, and enjoy an immersive dark theme game experience.",
     "createRoom": "Create Room",
     "joinRoom": "Join Room",
-    "learnMore": "How it works"
+    "learnMore": "How it works",
+    "features": [
+      {
+        "title": "Multiplayer fun",
+        "description": "Play with 2+ players in real time with shared scores."
+      },
+      {
+        "title": "5 categories",
+        "description": "Normal, Funny, Friends, Couples, and Spicy modes."
+      },
+      {
+        "title": "Scoreboard",
+        "description": "Track scores and crown the party champion."
+      }
+    ]
   },
   "createRoomPage": {
     "heading": "Create a room",
@@ -19,7 +43,9 @@
     "playerName": "Player name",
     "addPlayer": "Add player",
     "startGame": "Start game",
-    "roomCodeLabel": "Room code"
+    "roomCodeLabel": "Room code",
+    "setupTitle": "Room setup",
+    "playersTitle": "Players ready"
   },
   "joinRoomPage": {
     "heading": "Join a room",
@@ -40,6 +66,23 @@
     "skipped": "Skipped",
     "restart": "Restart game"
   },
+  "profilePage": {
+    "heading": "Profile",
+    "description": "Your signed-in game profile.",
+    "email": "Email",
+    "name": "Name",
+    "anonymous": "Player",
+    "status": "Status",
+    "signedIn": "Signed in"
+  },
+  "player": {
+    "waiting": "Waiting",
+    "starterOne": "Player 1",
+    "starterTwo": "Player 2",
+    "remove": "Remove",
+    "countSingle": "player",
+    "countPlural": "players"
+  },
   "notFoundPage": {
     "title": "Page not found",
     "message": "Looks like this room does not exist yet.",
@@ -53,15 +96,47 @@
     "continue": "Continue",
     "withGoogle": "Continue with Google",
     "signOut": "Sign out",
+    "description": "Sign in with your email or Google account to continue.",
+    "exchangeWarning": "Failed to exchange id token for backend JWT",
+    "exchangeError": "Auth exchange failed",
+    "providerError": "useAuth must be used within AuthProvider",
+    "firebaseMissing": "Firebase is not configured.",
     "missingCredentials": "Firebase credentials are missing. Add them to your environment file.",
     "errorDefault": "Authentication failed, please try again."
+  },
+  "api": {
+    "requestFailed": "API request failed with status"
+  },
+  "toast": {
+    "signedIn": "Signed in successfully.",
+    "signedOut": "Signed out successfully.",
+    "roomCreated": "Room created successfully.",
+    "roomJoined": "Joined room successfully.",
+    "categoryUpdated": "Category updated.",
+    "promptReady": "Prompt ready.",
+    "turnCompleted": "Turn completed.",
+    "turnSkipped": "Turn skipped.",
+    "gameRestarted": "Game restarted.",
+    "roomLoaded": "Room loaded.",
+    "errorDefault": "Something went wrong."
   },
   "form": {
     "placeholderRoomCode": "Enter room code",
     "placeholderName": "Type a name",
     "placeholderEmail": "you@example.com",
     "placeholderPassword": "Password",
-    "submit": "Submit"
+    "submit": "Submit",
+    "errors": {
+      "nameRequired": "Enter a player name.",
+      "nameMin": "Player name must be at least 2 characters.",
+      "roomCodeRequired": "Enter a room code.",
+      "roomCodeInvalid": "Room code must be at least 4 characters.",
+      "emailInvalid": "Enter a valid email address.",
+      "passwordMin": "Password must be at least 6 characters.",
+      "createPlayers": "Add at least two named players.",
+      "roomNotFound": "Room code not found. Try another code.",
+      "backendUnavailable": "Backend is unavailable. Please try again."
+    }
   },
   "buttons": {
     "back": "Back",

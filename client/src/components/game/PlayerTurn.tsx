@@ -1,5 +1,6 @@
 import { Player } from '../../types/Player';
 import { Button } from '../ui/Button';
+import translations from '../../en.json';
 
 type PlayerTurnProps = {
   player: Player;
@@ -25,15 +26,15 @@ export function PlayerTurn({
   return (
     <div className='player-turn-card'>
       <div className='turn-header'>
-        <p>Current player</p>
+        <p>{translations.gameRoomPage.currentPlayer}</p>
         <h3>{player.name}</h3>
       </div>
       <div className='choice-row'>
         <Button variant='secondary' onClick={onSelectTruth} disabled={disabled}>
-          Truth
+          {translations.gameRoomPage.truth}
         </Button>
         <Button variant='secondary' onClick={onSelectDare} disabled={disabled}>
-          Dare
+          {translations.gameRoomPage.dare}
         </Button>
       </div>
       {activePrompt && activeType && (
@@ -41,9 +42,11 @@ export function PlayerTurn({
           <span className='prompt-type'>{activeType.toUpperCase()}</span>
           <p>{activePrompt}</p>
           <div className='result-actions'>
-            <Button onClick={onComplete}>Completed</Button>
+            <Button onClick={onComplete}>
+              {translations.gameRoomPage.completed}
+            </Button>
             <Button variant='secondary' onClick={onSkip}>
-              Skipped
+              {translations.gameRoomPage.skipped}
             </Button>
           </div>
         </div>
