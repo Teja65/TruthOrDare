@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import { Room } from '../types/Room';
-import { Player } from '../types/Player';
+import { Room } from '../utils/Room';
+import { Player } from '../utils/Player';
 import {
   createBackendRoom,
   getBackendRoom,

@@ -64,7 +64,15 @@
     "dare": "Dare",
     "completed": "Completed",
     "skipped": "Skipped",
-    "restart": "Restart game"
+    "restart": "Restart game",
+    "endGame": "End game",
+    "results": "Game results",
+    "winner": "Winner",
+    "returnHome": "Return home",
+    "suggestQuestion": "Suggest question",
+    "questionType": "Question type",
+    "questionText": "Question text",
+    "saveQuestion": "Save question"
   },
   "profilePage": {
     "heading": "Profile",
@@ -94,6 +102,9 @@
     "email": "Email",
     "password": "Password",
     "continue": "Continue",
+    "createAccount": "Create account",
+    "haveAccount": "Already have an account?",
+    "needAccount": "Need an account?",
     "withGoogle": "Continue with Google",
     "signOut": "Sign out",
     "description": "Sign in with your email or Google account to continue.",
@@ -102,7 +113,17 @@
     "providerError": "useAuth must be used within AuthProvider",
     "firebaseMissing": "Firebase is not configured.",
     "missingCredentials": "Firebase credentials are missing. Add them to your environment file.",
-    "errorDefault": "Authentication failed, please try again."
+    "errorDefault": "Authentication failed, please try again.",
+    "invalidCredentials": "Invalid email or password.",
+    "emailNotFound": "No account was found for this email.",
+    "tooManyRequests": "Too many attempts. Please try again later."
+  },
+  "loginProvider": {
+    "emailSuccess": "Logged in with email and password.",
+    "googleSuccess": "Logged in with Google.",
+    "signUpSuccess": "Account created successfully.",
+    "useEmail": "This email is registered with email and password. Please login through email.",
+    "useGoogle": "This email is registered with Google. Please login through Google."
   },
   "api": {
     "requestFailed": "API request failed with status"
@@ -117,6 +138,8 @@
     "turnCompleted": "Turn completed.",
     "turnSkipped": "Turn skipped.",
     "gameRestarted": "Game restarted.",
+    "gameEnded": "Game ended.",
+    "questionSaved": "Question saved.",
     "roomLoaded": "Room loaded.",
     "errorDefault": "Something went wrong."
   },
@@ -136,6 +159,7 @@
       "createPlayers": "Add at least two named players.",
       "roomNotFound": "Room code not found. Try another code.",
       "backendUnavailable": "Backend is unavailable. Please try again."
+      ,"questionRequired": "Enter a question."
     }
   },
   "buttons": {

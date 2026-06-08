@@ -1,18 +1,23 @@
 import translations from '../../en.json';
 import { Card } from '../../components/ui/Card';
-import { useAuth } from '../../contexts/AuthContext';
-import squareUser from '../../assests/square-user.svg';
+import { useAuth } from '../../store/useAuth';
 
 export function ProfilePage() {
   const { user } = useAuth();
   const displayName =
     user?.displayName || user?.email || translations.profilePage.anonymous;
+  const initials = displayName
+    .split(/\s|@/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((item) => item[0]?.toUpperCase())
+    .join('');
 
   return (
     <section className='page-section profile-section'>
       <Card className='profile-card'>
         <div className='profile-avatar'>
-          <img src={squareUser} alt='' />
+          <span>{initials}</span>
         </div>
         <div className='profile-content'>
           <p className='eyebrow'>{translations.profilePage.status}</p>

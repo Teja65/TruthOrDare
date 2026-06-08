@@ -1,4 +1,4 @@
-import { Player } from '../../types/Player';
+import { Player } from '../../utils/Player';
 import translations from '../../en.json';
 
 type ScoreBoardProps = {

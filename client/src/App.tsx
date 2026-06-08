@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
+import { Provider } from 'react-redux';
 import { AppRoutes } from './routes/AppRoutes';
-import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import translations from './en.json';
+import { store } from './store/store';
+import { AuthBootstrap } from './store/AuthBootstrap';
 
 export function App() {
   useEffect(() => {
@@ -10,9 +12,11 @@ export function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <AppRoutes />
-      <Toaster position='top-right' />
-    </AuthProvider>
+    <Provider store={store}>
+      <AuthBootstrap>
+        <AppRoutes />
+        <Toaster position='top-right' />
+      </AuthBootstrap>
+    </Provider>
   );
 }

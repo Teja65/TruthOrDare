@@ -2,10 +2,9 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import translations from '../en.json';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../store/useAuth';
 import menuDark from '../assests/menu-dark.svg';
 import menuLight from '../assests/menu-light.svg';
-import squareUser from '../assests/square-user.svg';
 
 type MainLayoutProps = {
   children: ReactNode;
@@ -59,7 +58,6 @@ export function MainLayout({ children }: MainLayoutProps) {
           {isAuthenticated ? (
             <>
               <Link to='/profile' className='nav-link profile-link' onClick={closeMenu}>
-                <img src={squareUser} alt='' />
                 {translations.nav.profile}
               </Link>
               <button

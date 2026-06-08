@@ -1,9 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { categories } from '../utils/constants';
-import { prompts } from '../data/truthQuestions';
-import { darePrompts } from '../data/dareQuestions';
-import { Player } from '../types/Player';
-import { QuestionCategory, QuestionType } from '../types/Game';
+import { Player } from '../utils/Player';
+import { QuestionCategory, QuestionType } from '../utils/Game';
 import translations from '../en.json';
 import {
   chooseBackendPrompt,
@@ -35,10 +33,10 @@ export function useGame(roomCode?: string) {
     [currentPlayerId, players, turnIndex],
   );
 
-  function setPlayersFromRoom(roomPlayers: Player[]) {
+  const setPlayersFromRoom = useCallback((roomPlayers: Player[]) => {
     setPlayers(roomPlayers);
     setCurrentPlayerId((current) => current || roomPlayers[0]?.id || '');
-  }
+  }, []);
 
   const refreshGame = useCallback(async () => {
     if (!roomCode) return;
@@ -87,7 +85,10 @@ export function useGame(roomCode?: string) {
         return;
       }
     } catch (error) {
-      const collection = type === 'truth' ? prompts : darePrompts;
+      const collection =
+        type === 'truth'
+          ? translations.questions.truths
+          : translations.questions.dares;
       const list = collection[category] ?? [];
       setCurrentPrompt(
         list[Math.floor(Math.random() * list.length)] || '',
@@ -97,7 +98,10 @@ export function useGame(roomCode?: string) {
       window.setTimeout(() => setIsSpinning(false), 500);
     }
 
-    const collection = type === 'truth' ? prompts : darePrompts;
+    const collection =
+      type === 'truth'
+        ? translations.questions.truths
+        : translations.questions.dares;
     const list = collection[category] ?? [];
     setCurrentPrompt(list[Math.floor(Math.random() * list.length)] || '');
   }

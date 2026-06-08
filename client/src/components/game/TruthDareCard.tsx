@@ -1,4 +1,4 @@
-import { Player } from '../../types/Player';
+import { Player } from '../../utils/Player';
 
 type TruthDareCardProps = {
   player: Player;

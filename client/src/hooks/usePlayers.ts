@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Player } from '../types/Player';
+import { Player } from '../utils/Player';
 import translations from '../en.json';
 
 const starterPlayers: Player[] = [

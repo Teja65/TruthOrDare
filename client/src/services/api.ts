@@ -1,4 +1,4 @@
-import { getJwtToken } from '../firebase';
+import { getJwtToken } from '../utils/firebase';
 import { getStoredAuthToken } from './authService';
 import translations from '../en.json';
 

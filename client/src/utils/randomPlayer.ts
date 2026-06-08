@@ -1,4 +1,4 @@
-import { Player } from '../types/Player';
+import { Player } from './Player';
 
 export function pickRandomPlayer(players: Player[]) {
   if (!players.length) return null;

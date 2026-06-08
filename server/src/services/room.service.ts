@@ -3,8 +3,12 @@ import { Player } from '../models/Player';
 import { generateRoomCode } from '../utils/roomCodeGenerator';
 import translations from '../en.json';
 
-export async function createRoom(name?: string, hostName?: string) {
-  const roomCode = generateRoomCode();
+export async function createRoom(
+  name?: string,
+  hostName?: string,
+  requestedRoomCode?: string,
+) {
+  const roomCode = (requestedRoomCode || generateRoomCode()).toUpperCase();
   const record: any = {
     roomCode,
     name: name ?? `${translations.messages.roomNamePrefix} ${roomCode}`,

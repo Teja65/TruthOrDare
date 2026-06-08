@@ -1,6 +1,6 @@
-import { Room } from '../../types/Room';
-import { Player } from '../../types/Player';
-import { QuestionCategory, QuestionType } from '../../types/Game';
+import { Room } from '../../utils/Room';
+import { Player } from '../../utils/Player';
+import { QuestionCategory, QuestionType } from '../../utils/Game';
 import { fetchApi } from '../../services/api';
 import translations from '../../en.json';
 
