@@ -2,14 +2,15 @@ import { initializeApp, type FirebaseApp } from 'firebase/app';
 import {
   getAuth,
   GoogleAuthProvider,
+  EmailAuthProvider,
   createUserWithEmailAndPassword,
+  fetchSignInMethodsForEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
   type Auth,
-  type User,
 } from 'firebase/auth';
-import translations from './en.json';
+import translations from '../en.json';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAt9acDz4XC7AieEjcFgNoCNQBhGhnY8ZY',
@@ -33,6 +34,8 @@ if (hasFirebaseConfig) {
 
 export { auth };
 export const googleProvider = new GoogleAuthProvider();
+export const emailPasswordProvider = EmailAuthProvider.EMAIL_PASSWORD_SIGN_IN_METHOD;
+export const googleSignInProvider = GoogleAuthProvider.GOOGLE_SIGN_IN_METHOD;
 
 export async function createUser(email: string, password: string) {
   if (!auth) {
@@ -56,6 +59,14 @@ export async function signInWithGoogle() {
   }
 
   return signInWithPopup(auth, googleProvider);
+}
+
+export async function getEmailSignInMethods(email: string) {
+  if (!auth) {
+    throw new Error(translations.auth.firebaseMissing);
+  }
+
+  return fetchSignInMethodsForEmail(auth, email);
 }
 
 export async function signOutUser() {

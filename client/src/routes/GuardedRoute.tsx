@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { ReactNode } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../store/useAuth';
 import translations from '../en.json';
 
 type GuardedRouteProps = {

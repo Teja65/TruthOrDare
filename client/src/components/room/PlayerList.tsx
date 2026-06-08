@@ -1,4 +1,4 @@
-import { Player } from '../../types/Player';
+import { Player } from '../../utils/Player';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import translations from '../../en.json';
