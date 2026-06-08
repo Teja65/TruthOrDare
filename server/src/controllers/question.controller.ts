@@ -2,40 +2,32 @@ import { Request, Response } from 'express';
 import * as questionService from '../services/question.service';
 import translations from '../en.json';
 
-export async function getQuestions(req: Request, res: Response) {
-  const questions = await questionService.getQuestions();
-  res.json(questions);
+export async function getQuestions(_req: Request, res: Response) {
+  res.json(questionService.getQuestionsFromJson());
 }
 
 export async function getRandomQuestion(req: Request, res: Response) {
-  const { type } = req.query;
-  const question = await questionService.getRandomQuestion(type as 'truth' | 'dare');
+  const type = req.query.type as 'truth' | 'dare' | undefined;
+  const category = req.query.category as string | undefined;
+  const cursor = Number(req.query.cursor) || 0;
+
+  if (!type) {
+    return res.status(400).json({ message: translations.messages.questionUnavailable });
+  }
+
+  const question = questionService.getRotatingQuestion(type, category, cursor);
   if (!question) {
     return res.status(404).json({ message: translations.messages.questionUnavailable });
   }
   res.json(question);
 }
 
-export async function createQuestion(req: Request, res: Response) {
-  const { text, type } = req.body;
-  const question = await questionService.createQuestion(text, type);
-  res.status(201).json(question);
-}
-
-export async function updateQuestion(req: Request, res: Response) {
-  const { questionId } = req.params;
-  const question = await questionService.updateQuestion(questionId, req.body);
-  if (!question) {
-    return res.status(404).json({ message: translations.messages.questionNotFound });
-  }
-  res.json(question);
-}
-
-export async function deleteQuestion(req: Request, res: Response) {
-  const { questionId } = req.params;
-  const question = await questionService.deleteQuestion(questionId);
-  if (!question) {
-    return res.status(404).json({ message: translations.messages.questionNotFound });
-  }
-  res.json({ message: translations.messages.questionDeleted });
+export async function saveCustomQuestion(req: Request, res: Response) {
+  const { text, type, category } = req.body;
+  const question = await questionService.saveCustomQuestion(text, type, category);
+  res.status(201).json({
+    message: translations.messages.customQuestionSaved,
+    question,
+    questions: questionService.getQuestionsFromJson().questions,
+  });
 }

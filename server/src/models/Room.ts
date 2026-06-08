@@ -12,6 +12,10 @@ const roomSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    ownerUid: {
+      type: String,
+      index: true,
+    },
     hostId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Player',
@@ -26,6 +30,10 @@ const roomSchema = new mongoose.Schema(
       type: String,
       enum: ['waiting', 'active', 'ended'],
       default: 'waiting',
+    },
+    questionCursors: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
     },
     gameState: {
       currentPlayer: {

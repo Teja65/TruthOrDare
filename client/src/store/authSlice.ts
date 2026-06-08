@@ -5,6 +5,7 @@ type AuthUser = {
   displayName: string | null;
   email: string | null;
   uid: string;
+  provider?: 'google' | 'password';
 };
 
 type AuthState = {

@@ -2,15 +2,11 @@ import { Router } from 'express';
 import {
   getQuestions,
   getRandomQuestion,
-  createQuestion,
-  updateQuestion,
-  deleteQuestion,
+  saveCustomQuestion,
 } from '../controllers/question.controller';
 
 export const questionRoutes = Router();
 
 questionRoutes.get('/', getQuestions);
 questionRoutes.get('/random', getRandomQuestion);
-questionRoutes.post('/', createQuestion);
-questionRoutes.patch('/:questionId', updateQuestion);
-questionRoutes.delete('/:questionId', deleteQuestion);
+questionRoutes.post('/custom', saveCustomQuestion);

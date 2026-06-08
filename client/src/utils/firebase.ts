@@ -8,7 +8,9 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updateProfile,
   type Auth,
+  type UserCredential,
 } from 'firebase/auth';
 import translations from '../en.json';
 
@@ -37,12 +39,27 @@ export const googleProvider = new GoogleAuthProvider();
 export const emailPasswordProvider = EmailAuthProvider.EMAIL_PASSWORD_SIGN_IN_METHOD;
 export const googleSignInProvider = GoogleAuthProvider.GOOGLE_SIGN_IN_METHOD;
 
-export async function createUser(email: string, password: string) {
+export async function createUser(
+  email: string,
+  password: string,
+  username?: string,
+) {
   if (!auth) {
     throw new Error(translations.auth.firebaseMissing);
   }
 
-  return createUserWithEmailAndPassword(auth, email, password);
+  const credential = await createUserWithEmailAndPassword(auth, email, password);
+  if (username?.trim()) {
+    await updateProfile(credential.user, { displayName: username.trim() });
+  }
+  return credential;
+}
+
+export async function setUserDisplayName(
+  credential: UserCredential,
+  username: string,
+) {
+  await updateProfile(credential.user, { displayName: username.trim() });
 }
 
 export async function signInUser(email: string, password: string) {

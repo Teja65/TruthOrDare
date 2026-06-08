@@ -4,10 +4,14 @@ import translations from '../en.json';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
-export async function fetchWithJwt(input: RequestInfo, init?: RequestInit) {
+async function resolveAuthToken() {
   const stored = getStoredAuthToken();
-  const idTokenFallback = await getJwtToken();
-  const tokenToUse = stored ?? idTokenFallback;
+  if (stored) return stored;
+  return getJwtToken();
+}
+
+export async function fetchWithJwt(input: RequestInfo, init?: RequestInit) {
+  const tokenToUse = await resolveAuthToken();
 
   const headers = new Headers(init?.headers ?? {});
   if (tokenToUse) {
@@ -35,13 +39,23 @@ export async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> 
     headers.set('Content-Type', 'application/json');
   }
 
+  const tokenToUse = await resolveAuthToken();
+  if (tokenToUse) {
+    headers.set('Authorization', `Bearer ${tokenToUse}`);
+  }
+
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers,
   });
 
   if (!response.ok) {
-    throw new Error(`${translations.api.requestFailed} ${response.status}`);
+    const payload = await response.json().catch(() => null);
+    const message =
+      payload && typeof payload.message === 'string'
+        ? payload.message
+        : `${translations.api.requestFailed} ${response.status}`;
+    throw new Error(message);
   }
 
   return response.json();

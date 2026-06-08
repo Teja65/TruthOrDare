@@ -5,6 +5,28 @@ export interface AuthRequest extends Request {
   user?: Record<string, any>;
 }
 
+export function optionalAuthenticate(
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction,
+) {
+  const authorization = req.headers.authorization;
+  const token = authorization?.startsWith('Bearer ')
+    ? authorization.split(' ')[1]
+    : null;
+  const secret = process.env.JWT_SECRET;
+
+  if (token && secret) {
+    try {
+      req.user = jwt.verify(token, secret) as Record<string, any>;
+    } catch {
+      req.user = undefined;
+    }
+  }
+
+  next();
+}
+
 export function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
   const authorization = req.headers.authorization;
   const token = authorization?.startsWith('Bearer ') ? authorization.split(' ')[1] : null;

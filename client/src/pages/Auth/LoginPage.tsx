@@ -14,9 +14,11 @@ import {
   signInUser,
   signInWithGoogle,
 } from '../../utils/firebase';
+import { exchangeIdTokenForJwt } from '../../services/authService';
 import {
   getFieldError,
   loginSchema,
+  signUpSchema,
 } from '../../utils/validation';
 
 type RouteState = {
@@ -37,14 +39,34 @@ function getFirebaseCode(error: unknown) {
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({ email: '', password: '', form: '' });
-  const [touched, setTouched] = useState({ email: false, password: false });
+  const [errors, setErrors] = useState({
+    username: '',
+    email: '',
+    password: '',
+    form: '',
+  });
+  const [touched, setTouched] = useState({
+    username: false,
+    email: false,
+    password: false,
+  });
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn');
   const routeState = location.state as RouteState | null;
   const redirectTo = routeState?.from?.pathname ?? '/profile';
+
+  function validateUsername(value: string) {
+    if (mode !== 'signUp') return;
+    const result = signUpSchema.shape.username.safeParse(value);
+    setErrors((current) => ({
+      ...current,
+      username: result.success ? '' : result.error.issues[0]?.message ?? '',
+      form: '',
+    }));
+  }
 
   function validateEmail(value: string) {
     const result = loginSchema.shape.email.safeParse(value);
@@ -68,6 +90,7 @@ export function LoginPage() {
     event.preventDefault();
     if (!hasFirebaseConfig) {
       setErrors({
+        username: '',
         email: '',
         password: '',
         form: translations.auth.missingCredentials,
@@ -75,9 +98,13 @@ export function LoginPage() {
       return;
     }
 
-    const result = loginSchema.safeParse({ email, password });
+    const schema = mode === 'signUp' ? signUpSchema : loginSchema;
+    const result = schema.safeParse(
+      mode === 'signUp' ? { username, email, password } : { email, password },
+    );
     if (!result.success) {
       setErrors({
+        username: getFieldError(result.error, 'username') ?? '',
         email: getFieldError(result.error, 'email') ?? '',
         password: getFieldError(result.error, 'password') ?? '',
         form: '',
@@ -86,11 +113,22 @@ export function LoginPage() {
     }
 
     setLoading(true);
-    setErrors({ email: '', password: '', form: '' });
+    setErrors({ username: '', email: '', password: '', form: '' });
 
     try {
       if (mode === 'signUp') {
-        await createUser(result.data.email, result.data.password);
+        const signUpData = result.data as {
+          username: string;
+          email: string;
+          password: string;
+        };
+        const credential = await createUser(
+          signUpData.email,
+          signUpData.password,
+          signUpData.username,
+        );
+        const idToken = await credential.user.getIdToken();
+        await exchangeIdTokenForJwt(idToken, { username: signUpData.username });
         toast.success(translations.loginProvider.signUpSuccess);
       } else {
         const methods = await getEmailSignInMethods(result.data.email);
@@ -99,6 +137,7 @@ export function LoginPage() {
           !methods.includes(emailPasswordProvider)
         ) {
           setErrors({
+            username: '',
             email: '',
             password: '',
             form: translations.loginProvider.useGoogle,
@@ -107,7 +146,9 @@ export function LoginPage() {
           return;
         }
 
-        await signInUser(result.data.email, result.data.password);
+        const credential = await signInUser(result.data.email, result.data.password);
+        const idToken = await credential.user.getIdToken();
+        await exchangeIdTokenForJwt(idToken);
         toast.success(translations.loginProvider.emailSuccess);
       }
       navigate(redirectTo);
@@ -133,7 +174,7 @@ export function LoginPage() {
         message = translations.auth.errorDefault;
       }
 
-      setErrors({ email: '', password: '', form: message });
+      setErrors({ username: '', email: '', password: '', form: message });
       toast.error(message);
     } finally {
       setLoading(false);
@@ -143,6 +184,7 @@ export function LoginPage() {
   const handleGoogleSignIn = async () => {
     if (!hasFirebaseConfig) {
       setErrors({
+        username: '',
         email: '',
         password: '',
         form: translations.auth.missingCredentials,
@@ -151,10 +193,12 @@ export function LoginPage() {
     }
 
     setLoading(true);
-    setErrors({ email: '', password: '', form: '' });
+    setErrors({ username: '', email: '', password: '', form: '' });
 
     try {
-      await signInWithGoogle();
+      const credential = await signInWithGoogle();
+      const idToken = await credential.user.getIdToken();
+      await exchangeIdTokenForJwt(idToken);
       toast.success(translations.loginProvider.googleSuccess);
       navigate(redirectTo);
     } catch (error) {
@@ -164,7 +208,7 @@ export function LoginPage() {
           ? translations.loginProvider.useEmail
           : translations.auth.errorDefault;
 
-      setErrors({ email: '', password: '', form: message });
+      setErrors({ username: '', email: '', password: '', form: message });
       toast.error(message);
     } finally {
       setLoading(false);
@@ -184,6 +228,24 @@ export function LoginPage() {
         </div>
 
         <form className='form-stack form-panel' onSubmit={handleSubmit}>
+          {mode === 'signUp' && (
+            <Input
+              label={translations.auth.username}
+              placeholder={translations.form.placeholderUsername}
+              value={username}
+              error={errors.username}
+              onBlur={() => {
+                setTouched((current) => ({ ...current, username: true }));
+                validateUsername(username);
+              }}
+              onChange={(event) => {
+                setUsername(event.target.value);
+                if (touched.username) {
+                  validateUsername(event.target.value);
+                }
+              }}
+            />
+          )}
           <Input
             label={translations.auth.email}
             placeholder={translations.form.placeholderEmail}
@@ -230,7 +292,7 @@ export function LoginPage() {
           type='button'
           variant='ghost'
           onClick={() => {
-            setErrors({ email: '', password: '', form: '' });
+            setErrors({ username: '', email: '', password: '', form: '' });
             setMode((current) => (current === 'signIn' ? 'signUp' : 'signIn'));
           }}
         >

@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { categories } from '../utils/constants';
 import { Player } from '../utils/Player';
 import { QuestionCategory, QuestionType } from '../utils/Game';
 import translations from '../en.json';
+import { getQuestionsForPool, loadQuestionBankFromApi } from '../features/questions/questionPool';
 import {
   chooseBackendPrompt,
   completeBackendTurn,
@@ -10,6 +11,21 @@ import {
   restartBackendGame,
   setBackendCategory,
 } from '../features/room/roomApi';
+
+function getLocalPrompt(
+  type: QuestionType,
+  category: QuestionCategory,
+  cursors: Record<string, number>,
+) {
+  const poolKey = `${type}:${category}`;
+  const cursor = cursors[poolKey] ?? 0;
+  const list = getQuestionsForPool(type, category);
+  if (!list.length) return { text: '', nextCursors: cursors };
+  return {
+    text: list[cursor % list.length],
+    nextCursors: { ...cursors, [poolKey]: cursor + 1 },
+  };
+}
 
 export function useGame(roomCode?: string) {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -21,6 +37,9 @@ export function useGame(roomCode?: string) {
   const [activeType, setActiveType] = useState<QuestionType | null>(null);
   const [currentPrompt, setCurrentPrompt] = useState('');
   const [isSpinning, setIsSpinning] = useState(false);
+  const [questionCursors, setQuestionCursors] = useState<Record<string, number>>(
+    {},
+  );
 
   const currentPlayer = useMemo(
     () =>
@@ -37,6 +56,11 @@ export function useGame(roomCode?: string) {
     setPlayers(roomPlayers);
     setCurrentPlayerId((current) => current || roomPlayers[0]?.id || '');
   }, []);
+
+  useEffect(() => {
+    if (!roomCode) return;
+    loadQuestionBankFromApi().catch(() => undefined);
+  }, [roomCode]);
 
   const refreshGame = useCallback(async () => {
     if (!roomCode) return;
@@ -84,26 +108,18 @@ export function useGame(roomCode?: string) {
         setCurrentPrompt(snapshot.currentPrompt);
         return;
       }
-    } catch (error) {
-      const collection =
-        type === 'truth'
-          ? translations.questions.truths
-          : translations.questions.dares;
-      const list = collection[category] ?? [];
-      setCurrentPrompt(
-        list[Math.floor(Math.random() * list.length)] || '',
-      );
+    } catch {
+      const local = getLocalPrompt(type, category, questionCursors);
+      setQuestionCursors(local.nextCursors);
+      setCurrentPrompt(local.text);
       return;
     } finally {
       window.setTimeout(() => setIsSpinning(false), 500);
     }
 
-    const collection =
-      type === 'truth'
-        ? translations.questions.truths
-        : translations.questions.dares;
-    const list = collection[category] ?? [];
-    setCurrentPrompt(list[Math.floor(Math.random() * list.length)] || '');
+    const local = getLocalPrompt(type, category, questionCursors);
+    setQuestionCursors(local.nextCursors);
+    setCurrentPrompt(local.text);
   }
 
   async function finishTurn(delta: number) {
@@ -153,6 +169,7 @@ export function useGame(roomCode?: string) {
     setTurnIndex(0);
     setActiveType(null);
     setCurrentPrompt('');
+    setQuestionCursors({});
   }
 
   return {

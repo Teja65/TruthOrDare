@@ -18,9 +18,19 @@ export const joinRoomSchema = z.object({
   playerName: playerNameSchema,
 });
 
+export const usernameSchema = z
+  .string()
+  .trim()
+  .min(1, translations.form.errors.usernameRequired)
+  .min(2, translations.form.errors.usernameMin);
+
 export const loginSchema = z.object({
   email: z.string().trim().email(translations.form.errors.emailInvalid),
   password: z.string().min(6, translations.form.errors.passwordMin),
+});
+
+export const signUpSchema = loginSchema.extend({
+  username: usernameSchema,
 });
 
 export function getFieldError(error: z.ZodError, field: string) {

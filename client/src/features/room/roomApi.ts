@@ -4,6 +4,19 @@ import { QuestionCategory, QuestionType } from '../../utils/Game';
 import { fetchApi } from '../../services/api';
 import translations from '../../en.json';
 
+export type RoomDisplayStatus = 'running' | 'ended';
+
+export type RoomSummary = {
+  roomCode: string;
+  name?: string;
+  status: 'waiting' | 'active' | 'ended';
+  displayStatus: RoomDisplayStatus;
+  playerCount: number;
+  ownerUid?: string;
+  updatedAt?: string;
+  createdAt?: string;
+};
+
 type ServerPlayer = {
   _id?: string;
   id?: string;
@@ -14,6 +27,8 @@ type ServerPlayer = {
 type ServerRoom = {
   roomCode: string;
   name?: string;
+  status?: 'waiting' | 'active' | 'ended';
+  displayStatus?: RoomDisplayStatus;
   players?: ServerPlayer[];
   createdAt?: string;
   gameState?: {
@@ -36,10 +51,16 @@ export type GameSnapshot = {
   category: QuestionCategory;
   activeType: QuestionType | null;
   currentPrompt: string;
+  displayStatus: RoomDisplayStatus;
 };
 
 function getPlayerId(player: ServerPlayer) {
   return player._id ?? player.id ?? crypto.randomUUID();
+}
+
+function resolveDisplayStatus(serverRoom: ServerRoom): RoomDisplayStatus {
+  if (serverRoom.displayStatus) return serverRoom.displayStatus;
+  return serverRoom.status === 'ended' ? 'ended' : 'running';
 }
 
 function mapPlayers(serverRoom: ServerRoom): Player[] {
@@ -75,6 +96,8 @@ export function mapServerRoom(serverRoom: ServerRoom): GameSnapshot {
       host: serverRoom.name ?? translations.app.brand,
       players,
       createdAt: serverRoom.createdAt ?? new Date().toISOString(),
+      status: serverRoom.status ?? 'waiting',
+      displayStatus: resolveDisplayStatus(serverRoom),
     },
     currentPlayerId,
     category:
@@ -82,7 +105,16 @@ export function mapServerRoom(serverRoom: ServerRoom): GameSnapshot {
       (translations.categories[0] as QuestionCategory),
     activeType: serverRoom.gameState?.currentQuestion?.type ?? null,
     currentPrompt: serverRoom.gameState?.currentQuestion?.text ?? '',
+    displayStatus: resolveDisplayStatus(serverRoom),
   };
+}
+
+export async function listAllRooms() {
+  return fetchApi<RoomSummary[]>('/rooms');
+}
+
+export async function listMyRooms() {
+  return fetchApi<RoomSummary[]>('/rooms/mine');
 }
 
 export async function createBackendRoom(hostName: string, roomCode: string) {
@@ -104,6 +136,13 @@ export async function joinBackendRoom(roomCode: string, playerName: string) {
     body: JSON.stringify({ playerName }),
   });
   return getBackendRoom(roomCode);
+}
+
+export async function updateBackendPlayer(playerId: string, name: string) {
+  return fetchApi(`/players/${playerId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  });
 }
 
 export async function startBackendGame(roomCode: string) {
@@ -150,4 +189,8 @@ export async function restartBackendGame(roomCode: string) {
     method: 'POST',
   });
   return mapServerRoom(room);
+}
+
+export async function endBackendGame(roomCode: string) {
+  return fetchApi(`/games/${roomCode}/end`, { method: 'POST' });
 }
