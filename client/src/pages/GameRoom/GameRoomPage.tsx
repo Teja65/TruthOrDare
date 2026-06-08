@@ -6,18 +6,16 @@ import { PlayerTurn } from '../../components/game/PlayerTurn';
 import { ScoreBoard } from '../../components/game/ScoreBoard';
 import { RoomInfo } from '../../components/room/RoomInfo';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { createQuestion } from '../../features/questions/questionService';
+import { endBackendGame } from '../../features/room/roomApi';
 import { useGame } from '../../hooks/useGame';
 import { useRoom } from '../../hooks/useRoom';
-import type { QuestionCategory, QuestionType } from '../../utils/Game';
+import type { QuestionCategory } from '../../utils/Game';
+import type { Player } from '../../utils/Player';
 
 export function GameRoomPage() {
   const { roomCode: routeRoomCode = '' } = useParams();
   const [isEnded, setIsEnded] = useState(false);
-  const [suggestionType, setSuggestionType] = useState<QuestionType>('truth');
-  const [suggestionText, setSuggestionText] = useState('');
-  const [suggestionError, setSuggestionError] = useState('');
+  const [roomStatus, setRoomStatus] = useState<'running' | 'ended'>('running');
   const { roomCode, room, loadRoom, loading } = useRoom();
   const {
     players,
@@ -39,7 +37,12 @@ export function GameRoomPage() {
 
     loadRoom(routeRoomCode)
       .then((loadedRoom) => {
+        const ended = loadedRoom.displayStatus === 'ended';
+        setRoomStatus(loadedRoom.displayStatus ?? 'running');
         setPlayers(loadedRoom.players);
+        if (ended) {
+          setIsEnded(true);
+        }
       })
       .catch(() => {
         toast.error(translations.form.errors.roomNotFound);
@@ -50,19 +53,30 @@ export function GameRoomPage() {
     if (room.players.length) {
       setPlayers(room.players);
     }
-  }, [room.players, setPlayers]);
+    if (room.displayStatus) {
+      setRoomStatus(room.displayStatus);
+    }
+  }, [room.displayStatus, room.players, setPlayers]);
 
   useEffect(() => {
     refreshGame();
   }, [refreshGame]);
 
-  const canPlay = room.players.length >= 2;
+  const canPlay = room.players.length >= 2 && roomStatus === 'running';
   const playerCount = room.players.length;
   const sortedResults = useMemo(
     () => [...players].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name)),
     [players],
   );
   const winner = sortedResults[0];
+
+  function handlePlayerUpdated(player: Player) {
+    setPlayers(
+      players.map((item) =>
+        item.id === player.id ? { ...item, name: player.name } : item,
+      ),
+    );
+  }
 
   async function handleCategorySelect(item: QuestionCategory) {
     await selectCategory(item);
@@ -85,27 +99,22 @@ export function GameRoomPage() {
 
   async function handleRestart() {
     setIsEnded(false);
+    setRoomStatus('running');
     await restartGame();
     toast.success(translations.toast.gameRestarted);
   }
 
-  function handleEndGame() {
-    setIsEnded(true);
-    toast.success(translations.toast.gameEnded);
-  }
-
-  async function handleQuestionSuggestion(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const text = suggestionText.trim();
-    if (!text) {
-      setSuggestionError(translations.form.errors.questionRequired);
-      return;
+  async function handleEndGame() {
+    try {
+      if (routeRoomCode) {
+        await endBackendGame(routeRoomCode);
+      }
+      setRoomStatus('ended');
+      setIsEnded(true);
+      toast.success(translations.toast.gameEnded);
+    } catch {
+      toast.error(translations.toast.errorDefault);
     }
-
-    await createQuestion(text, suggestionType);
-    setSuggestionText('');
-    setSuggestionError('');
-    toast.success(translations.toast.questionSaved);
   }
 
   if (loading) {
@@ -115,7 +124,11 @@ export function GameRoomPage() {
   return (
     <section className='page-section room-page'>
       <div className='room-grid'>
-        <RoomInfo roomCode={roomCode || routeRoomCode} playerCount={playerCount} />
+        <RoomInfo
+          roomCode={roomCode || routeRoomCode}
+          playerCount={playerCount}
+          displayStatus={roomStatus}
+        />
         <div className='game-panel'>
           <div className='section-header'>
             <h2>{translations.gameRoomPage.heading}</h2>
@@ -154,6 +167,7 @@ export function GameRoomPage() {
                     }
                     type='button'
                     onClick={() => handleCategorySelect(item as QuestionCategory)}
+                    disabled={!canPlay}
                   >
                     {item}
                   </button>
@@ -162,6 +176,7 @@ export function GameRoomPage() {
               <div className={isSpinning ? 'choice-spin spinning' : 'choice-spin'}>
                 <PlayerTurn
                   player={currentPlayer}
+                  category={category}
                   onSelectTruth={() => handlePrompt('truth')}
                   onSelectDare={() => handlePrompt('dare')}
                   activePrompt={currentPrompt}
@@ -173,61 +188,30 @@ export function GameRoomPage() {
               </div>
             </>
           )}
-          <div className='button-row small-gap'>
-            <button
-              className='secondary-button'
-              type='button'
-              onClick={handleRestart}
-            >
-              {translations.buttons.restart}
-            </button>
-            <button
-              className='secondary-button danger-action'
-              type='button'
-              onClick={handleEndGame}
-            >
-              {translations.gameRoomPage.endGame}
-            </button>
-          </div>
-          <form className='suggestion-panel' onSubmit={handleQuestionSuggestion}>
-            <p className='eyebrow'>{translations.gameRoomPage.suggestQuestion}</p>
+          {roomStatus === 'running' && (
             <div className='button-row small-gap'>
               <button
-                className={
-                  suggestionType === 'truth'
-                    ? 'category-card selected'
-                    : 'category-card'
-                }
+                className='secondary-button'
                 type='button'
-                onClick={() => setSuggestionType('truth')}
+                onClick={handleRestart}
               >
-                {translations.gameRoomPage.truth}
+                {translations.buttons.restart}
               </button>
               <button
-                className={
-                  suggestionType === 'dare'
-                    ? 'category-card selected'
-                    : 'category-card'
-                }
+                className='secondary-button danger-action'
                 type='button'
-                onClick={() => setSuggestionType('dare')}
+                onClick={handleEndGame}
               >
-                {translations.gameRoomPage.dare}
+                {translations.gameRoomPage.endGame}
               </button>
             </div>
-            <Input
-              label={translations.gameRoomPage.questionText}
-              value={suggestionText}
-              error={suggestionError}
-              onChange={(event) => {
-                setSuggestionText(event.target.value);
-                setSuggestionError('');
-              }}
-            />
-            <Button type='submit'>{translations.gameRoomPage.saveQuestion}</Button>
-          </form>
+          )}
         </div>
-        <ScoreBoard players={players} />
+        <ScoreBoard
+          players={players}
+          onPlayerUpdated={handlePlayerUpdated}
+          editable={roomStatus === 'running'}
+        />
       </div>
     </section>
   );

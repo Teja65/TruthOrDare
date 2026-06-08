@@ -1,8 +1,26 @@
 import { Room } from '../models/Room';
 import { GameHistory } from '../models/GameHistory';
 import { Player } from '../models/Player';
-import { getRandomQuestion } from './question.service';
+import {
+  getRotatingQuestion,
+  loadTranslations,
+  normalizeCategory,
+} from './question.service';
 import translations from '../en.json';
+
+function readPoolCursor(room: any, poolKey: string) {
+  const root = room.questionCursors ?? {};
+  const legacy = room.gameState?.questionCursors ?? {};
+  return root[poolKey] ?? legacy[poolKey] ?? 0;
+}
+
+function writePoolCursor(room: any, poolKey: string, nextCursor: number) {
+  room.questionCursors = {
+    ...(room.questionCursors ?? {}),
+    [poolKey]: nextCursor,
+  };
+  room.markModified('questionCursors');
+}
 
 export async function startGame(roomCode: string) {
   const room = await Room.findOne({
@@ -17,6 +35,8 @@ export async function startGame(roomCode: string) {
   }
 
   room.status = 'active';
+  room.questionCursors = {};
+  room.markModified('questionCursors');
   room.gameState = {
     currentTurn: 1,
     currentPlayer: room.players[0]._id,
@@ -110,24 +130,29 @@ async function selectQuestion(
 
   const gameState: any =
     room.gameState ?? (room.gameState = { currentTurn: 0, scores: [] } as any);
-  const selectedCategory = translations.categories.includes(category ?? '')
-    ? category
-    : gameState.currentCategory ?? translations.categories[0];
+  const selectedCategory = normalizeCategory(
+    category ?? gameState.currentCategory,
+  );
   gameState.currentCategory = selectedCategory;
 
-  const question = await getRandomQuestion(type, selectedCategory);
+  const poolKey = `${type}:${selectedCategory}`;
+  const cursor = readPoolCursor(room, poolKey);
+  const question = getRotatingQuestion(type, selectedCategory, cursor);
   if (!question) {
     throw new Error(translations.messages.questionUnavailable);
   }
 
+  writePoolCursor(room, poolKey, question.nextCursor);
   gameState.currentQuestion = {
-    questionId: question._id,
     type: question.type,
     text: question.text,
   } as any;
 
+  room.markModified('gameState');
   await room.save();
-  return room;
+  return Room.findOne({ roomCode: roomCode.toUpperCase() })
+    .populate('players')
+    .populate('gameState.currentPlayer');
 }
 
 export function selectTruth(roomCode: string, category?: string) {
@@ -207,10 +232,12 @@ export async function restartGame(roomCode: string) {
 
   await Player.updateMany({ roomCode: room.roomCode }, { score: 0 });
   room.status = 'active';
+  room.questionCursors = {};
+  room.markModified('questionCursors');
   room.gameState = {
     currentTurn: 1,
     currentPlayer: room.players[0]?._id,
-    currentCategory: translations.categories[0] as any,
+    currentCategory: loadTranslations().categories[0] as any,
     currentQuestion: undefined,
     scores: room.players.map((player: any) => ({
       player: player._id,

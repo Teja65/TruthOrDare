@@ -8,6 +8,7 @@
   },
   "nav": {
     "home": "Home",
+    "rooms": "Rooms",
     "profile": "Profile",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
@@ -20,7 +21,13 @@
     "intro": "Truth or Dare is the ultimate party game to break the ice and create unforgettable moments with friends. Select from 5 unique categories, complete hilarious challenges, and track the leaderboard. Host a game in seconds or join an existing room with just a room code.",
     "summary": "Choose a room flow, invite friends, and enjoy an immersive dark theme game experience.",
     "createRoom": "Create Room",
+    "rooms": "Rooms",
     "joinRoom": "Join Room",
+    "roomChoiceTitle": "You already have a running room",
+    "roomChoiceMessage": "Want to join your existing room or create a new one?",
+    "roomChoiceToast": "You have a running room. Join it or create a new one.",
+    "joinExisting": "Join existing",
+    "createNewRoom": "Create new room",
     "learnMore": "How it works",
     "features": [
       {
@@ -72,7 +79,25 @@
     "suggestQuestion": "Suggest question",
     "questionType": "Question type",
     "questionText": "Question text",
-    "saveQuestion": "Save question"
+    "saveQuestion": "Save question",
+    "customQuestion": "Custom",
+    "customPlaceholder": "Write your own question",
+    "saveCustom": "Save custom",
+    "editPlayers": "Players",
+    "editPlayer": "Edit",
+    "savePlayer": "Save",
+    "cancelEdit": "Cancel"
+  },
+  "roomsPage": {
+    "heading": "All rooms",
+    "description": "Browse running and ended game rooms.",
+    "running": "Running",
+    "ended": "Ended",
+    "open": "Open",
+    "view": "View",
+    "all": "All",
+    "empty": "No rooms yet. Create one to get started.",
+    "emptyFiltered": "No rooms match this filter."
   },
   "profilePage": {
     "heading": "Profile",
@@ -81,7 +106,15 @@
     "name": "Name",
     "anonymous": "Player",
     "status": "Status",
-    "signedIn": "Signed in"
+    "signedIn": "Signed in",
+    "provider": "Provider",
+    "google": "Google",
+    "emailProvider": "Email & password"
+  },
+  "footer": {
+    "tagline": "Party game nights made simple.",
+    "license": "MIT License",
+    "copyright": "© 2026 TruthOrDare"
   },
   "player": {
     "waiting": "Waiting",
@@ -100,6 +133,7 @@
     "signIn": "Sign in",
     "signUp": "Sign up",
     "email": "Email",
+    "username": "Username",
     "password": "Password",
     "continue": "Continue",
     "createAccount": "Create account",
@@ -140,6 +174,9 @@
     "gameRestarted": "Game restarted.",
     "gameEnded": "Game ended.",
     "questionSaved": "Question saved.",
+    "customQuestionSaved": "Custom question saved for future rooms.",
+    "playerUpdated": "Player name updated.",
+    "roomEnded": "This room has ended. Please create a new room.",
     "roomLoaded": "Room loaded.",
     "errorDefault": "Something went wrong."
   },
@@ -148,6 +185,7 @@
     "placeholderName": "Type a name",
     "placeholderEmail": "you@example.com",
     "placeholderPassword": "Password",
+    "placeholderUsername": "Your display name",
     "submit": "Submit",
     "errors": {
       "nameRequired": "Enter a player name.",
@@ -158,8 +196,11 @@
       "passwordMin": "Password must be at least 6 characters.",
       "createPlayers": "Add at least two named players.",
       "roomNotFound": "Room code not found. Try another code.",
-      "backendUnavailable": "Backend is unavailable. Please try again."
-      ,"questionRequired": "Enter a question."
+      "backendUnavailable": "Backend is unavailable. Please try again.",
+      "questionRequired": "Enter a question.",
+      "usernameRequired": "Enter a username.",
+      "usernameMin": "Username must be at least 2 characters.",
+      "roomEnded": "This room has ended. Please create a new room."
     }
   },
   "buttons": {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import translations from '../../en.json';
 import { Button } from '../../components/ui/Button';
@@ -60,12 +60,16 @@ export function JoinRoomPage() {
       toast.success(translations.toast.roomJoined);
       navigate(`/room/${room.code}`);
     } catch (error) {
+      const message =
+        error instanceof Error && error.message.includes('ended')
+          ? translations.form.errors.roomEnded
+          : translations.form.errors.roomNotFound;
       setErrors({
         roomCode: '',
         playerName: '',
-        form: translations.form.errors.roomNotFound,
+        form: message,
       });
-      toast.error(translations.form.errors.roomNotFound);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -112,6 +116,11 @@ export function JoinRoomPage() {
             }}
           />
           {errors.form && <p className='form-error'>{errors.form}</p>}
+          {errors.form === translations.form.errors.roomEnded && (
+            <Button as={Link} to='/create' variant='secondary'>
+              {translations.homePage.createRoom}
+            </Button>
+          )}
           <Button type='submit' disabled={submitting}>
             {translations.joinRoomPage.joinGame}
           </Button>

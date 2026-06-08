@@ -37,11 +37,18 @@ export function AuthBootstrap({ children }: AuthBootstrapProps) {
 
       try {
         const idToken = await user.getIdToken();
-        await exchangeIdTokenForJwt(idToken);
+        const result = await exchangeIdTokenForJwt(idToken);
         dispatch(setHasToken(Boolean(getStoredAuthToken())));
+        dispatch(
+          authChanged({
+            displayName: result.user?.username ?? user.displayName,
+            email: user.email,
+            uid: user.uid,
+            provider: result.user?.provider,
+          }),
+        );
       } catch (error) {
         console.warn(translations.auth.exchangeWarning, error);
-      } finally {
         dispatch(
           authChanged({
             displayName: user.displayName,

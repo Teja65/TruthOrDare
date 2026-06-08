@@ -1,7 +1,17 @@
 import { Request, Response } from 'express';
 import * as gameService from '../services/game.service';
 import * as roomService from '../services/room.service';
+import { toDisplayStatus } from '../utils/roomStatus';
 import translations from '../en.json';
+
+function withDisplayStatus(room: any) {
+  if (!room) return room;
+  const plain = room.toObject ? room.toObject() : room;
+  return {
+    ...plain,
+    displayStatus: toDisplayStatus(plain.status),
+  };
+}
 
 export async function startGame(req: Request, res: Response) {
   const { roomCode } = req.params;
@@ -15,7 +25,7 @@ export async function getGame(req: Request, res: Response) {
   if (!room) {
     return res.status(404).json({ message: translations.messages.gameRoomNotFound });
   }
-  res.json(room);
+  res.json(withDisplayStatus(room));
 }
 
 export async function nextTurn(req: Request, res: Response) {

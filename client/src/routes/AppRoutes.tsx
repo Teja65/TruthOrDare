@@ -7,6 +7,7 @@ import { GameRoomPage } from '../pages/GameRoom/GameRoomPage';
 import { NotFoundPage } from '../pages/NotFound/NotFoundPage';
 import { LoginPage } from '../pages/Auth/LoginPage';
 import { ProfilePage } from '../pages/Profile/ProfilePage';
+import { RoomsPage } from '../pages/Rooms/RoomsPage';
 import { GuardedRoute } from './GuardedRoute';
 
 export function AppRoutes() {
@@ -46,6 +47,16 @@ export function AppRoutes() {
           element={
             <MainLayout>
               <LoginPage />
+            </MainLayout>
+          }
+        />
+        <Route
+          path='/rooms'
+          element={
+            <MainLayout>
+              <GuardedRoute>
+                <RoomsPage />
+              </GuardedRoute>
             </MainLayout>
           }
         />

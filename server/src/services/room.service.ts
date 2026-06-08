@@ -1,17 +1,47 @@
 import { Room } from '../models/Room';
 import { Player } from '../models/Player';
 import { generateRoomCode } from '../utils/roomCodeGenerator';
+import { toDisplayStatus } from '../utils/roomStatus';
 import translations from '../en.json';
+
+function mapRoomSummary(room: any) {
+  return {
+    roomCode: room.roomCode,
+    name: room.name,
+    status: room.status,
+    displayStatus: toDisplayStatus(room.status),
+    playerCount: room.players?.length ?? 0,
+    ownerUid: room.ownerUid,
+    updatedAt: room.updatedAt,
+    createdAt: room.createdAt,
+  };
+}
+
+export async function listAllRooms() {
+  const rooms = await Room.find()
+    .populate('players')
+    .sort({ updatedAt: -1 });
+  return rooms.map(mapRoomSummary);
+}
+
+export async function listRoomsByOwner(ownerUid: string) {
+  const rooms = await Room.find({ ownerUid })
+    .populate('players')
+    .sort({ updatedAt: -1 });
+  return rooms.map(mapRoomSummary);
+}
 
 export async function createRoom(
   name?: string,
   hostName?: string,
   requestedRoomCode?: string,
+  ownerUid?: string,
 ) {
   const roomCode = (requestedRoomCode || generateRoomCode()).toUpperCase();
   const record: any = {
     roomCode,
     name: name ?? `${translations.messages.roomNamePrefix} ${roomCode}`,
+    ownerUid,
   };
 
   if (hostName) {
@@ -49,6 +79,10 @@ export async function joinRoom(roomCode: string, playerName: string) {
   const room = await Room.findOne({ roomCode: roomCode.toUpperCase() });
   if (!room) {
     throw new Error(translations.messages.roomNotFound);
+  }
+
+  if (room.status === 'ended') {
+    throw new Error(translations.messages.roomEnded);
   }
 
   const player = await Player.create({
