@@ -13,6 +13,13 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(express.json());
 
+app.get("/", (_req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "TruthOrDare API is running",
+  });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/players', playerRoutes);
