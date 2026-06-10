@@ -195,7 +195,3 @@ Import the repo and set **Root Directory** to `client`.
 | `npm start`     | Run production server    |
 
 ---
-
-## License
-
-MIT

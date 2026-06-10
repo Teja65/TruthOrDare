@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import toast from 'react-hot-toast';
 import { Player } from '../../utils/Player';
+import { notifyError, notifySuccess } from '../../utils/toastConfig';
 import { QuestionCategory } from '../../utils/Game';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -40,11 +40,9 @@ export function PlayerTurn({
     try {
       await saveCustomQuestion(customText.trim(), activeType, category);
       setCustomText('');
-      toast.success(
-        translations.toast.customQuestionSaved,
-      );
+      notifySuccess(translations.toast.customQuestionSaved);
     } catch {
-      toast.error(translations.toast.errorDefault);
+      notifyError(translations.toast.errorDefault);
     } finally {
       setSaving(false);
     }

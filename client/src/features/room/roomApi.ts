@@ -54,8 +54,22 @@ export type GameSnapshot = {
   displayStatus: RoomDisplayStatus;
 };
 
+function normalizeId(value: unknown) {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && value !== null) {
+    if ('_id' in value && (value as { _id?: unknown })._id) {
+      return String((value as { _id: unknown })._id);
+    }
+    if ('id' in value && (value as { id?: unknown }).id) {
+      return String((value as { id: unknown }).id);
+    }
+  }
+  return String(value);
+}
+
 function getPlayerId(player: ServerPlayer) {
-  return player._id ?? player.id ?? crypto.randomUUID();
+  return normalizeId(player._id ?? player.id) || crypto.randomUUID();
 }
 
 function resolveDisplayStatus(serverRoom: ServerRoom): RoomDisplayStatus {
@@ -67,14 +81,10 @@ function mapPlayers(serverRoom: ServerRoom): Player[] {
   const scores = serverRoom.gameState?.scores ?? [];
   return (serverRoom.players ?? []).map((player) => {
     const id = getPlayerId(player);
-    const score =
-      scores.find((entry) => {
-        const playerRef =
-          typeof entry.player === 'string'
-            ? entry.player
-            : entry.player?._id ?? entry.player?.id;
-        return playerRef === id;
-      })?.score ?? player.score ?? 0;
+    const scoreEntry = scores.find(
+      (entry) => normalizeId(entry.player) === id,
+    );
+    const score = scoreEntry?.score ?? player.score ?? 0;
 
     return {
       id,
@@ -193,4 +203,25 @@ export async function restartBackendGame(roomCode: string) {
 
 export async function endBackendGame(roomCode: string) {
   return fetchApi(`/games/${roomCode}/end`, { method: 'POST' });
+}
+
+export async function updateBackendRoom(
+  roomCode: string,
+  data: { name?: string; status?: 'waiting' | 'active' | 'ended' },
+) {
+  return fetchApi<ServerRoom>(`/rooms/${roomCode}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteBackendRoom(roomCode: string) {
+  return fetchApi(`/rooms/${roomCode}`, { method: 'DELETE' });
+}
+
+export async function removeBackendPlayer(roomCode: string, playerId: string) {
+  return fetchApi(`/rooms/${roomCode}/leave`, {
+    method: 'POST',
+    body: JSON.stringify({ playerId }),
+  });
 }

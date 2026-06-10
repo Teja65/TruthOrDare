@@ -29,7 +29,15 @@ export async function exchangeIdTokenForJwt(
   if (token) {
     sessionStorage.setItem(AUTH_STORAGE_KEY, token);
   }
-  return { token: token ?? null, user: data.user };
+  return {
+    token: token ?? null,
+    user: data.user as {
+      uid: string;
+      email?: string;
+      username?: string;
+      provider?: 'google' | 'password';
+    },
+  };
 }
 
 export function getStoredAuthToken(): string | null {

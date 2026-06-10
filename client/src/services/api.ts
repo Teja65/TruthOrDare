@@ -1,17 +1,14 @@
-import { getJwtToken } from '../utils/firebase';
 import { getStoredAuthToken } from './authService';
 import translations from '../en.json';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
-async function resolveAuthToken() {
-  const stored = getStoredAuthToken();
-  if (stored) return stored;
-  return getJwtToken();
+function resolveAuthToken() {
+  return getStoredAuthToken();
 }
 
 export async function fetchWithJwt(input: RequestInfo, init?: RequestInit) {
-  const tokenToUse = await resolveAuthToken();
+  const tokenToUse = resolveAuthToken();
 
   const headers = new Headers(init?.headers ?? {});
   if (tokenToUse) {
@@ -39,7 +36,7 @@ export async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> 
     headers.set('Content-Type', 'application/json');
   }
 
-  const tokenToUse = await resolveAuthToken();
+  const tokenToUse = resolveAuthToken();
   if (tokenToUse) {
     headers.set('Authorization', `Bearer ${tokenToUse}`);
   }

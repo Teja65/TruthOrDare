@@ -38,34 +38,34 @@ export async function selectTruth(req: Request, res: Response) {
   const { roomCode } = req.params;
   const { category } = req.body;
   const game = await gameService.selectTruth(roomCode, category);
-  res.json(game);
+  res.json(withDisplayStatus(game));
 }
 
 export async function selectDare(req: Request, res: Response) {
   const { roomCode } = req.params;
   const { category } = req.body;
   const game = await gameService.selectDare(roomCode, category);
-  res.json(game);
+  res.json(withDisplayStatus(game));
 }
 
 export async function selectCategory(req: Request, res: Response) {
   const { roomCode } = req.params;
   const { category } = req.body;
   const game = await gameService.selectCategory(roomCode, category);
-  res.json(game);
+  res.json(withDisplayStatus(game));
 }
 
 export async function completeTurn(req: Request, res: Response) {
   const { roomCode } = req.params;
   const { delta } = req.body;
   const game = await gameService.completeTurn(roomCode, Number(delta) || 0);
-  res.json(game);
+  res.json(withDisplayStatus(game));
 }
 
 export async function restartGame(req: Request, res: Response) {
   const { roomCode } = req.params;
   const game = await gameService.restartGame(roomCode);
-  res.json(game);
+  res.json(withDisplayStatus(game));
 }
 
 export async function skipTurn(req: Request, res: Response) {

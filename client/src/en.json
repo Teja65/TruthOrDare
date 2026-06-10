@@ -86,7 +86,9 @@
     "editPlayers": "Players",
     "editPlayer": "Edit",
     "savePlayer": "Save",
-    "cancelEdit": "Cancel"
+    "cancelEdit": "Cancel",
+    "deletePlayer": "Delete",
+    "deletePlayerConfirm": "Remove this player from the room?"
   },
   "roomsPage": {
     "heading": "All rooms",
@@ -96,24 +98,36 @@
     "open": "Open",
     "view": "View",
     "all": "All",
+    "create": "Create room",
+    "edit": "Edit",
+    "save": "Save",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this room permanently?",
     "empty": "No rooms yet. Create one to get started.",
     "emptyFiltered": "No rooms match this filter."
   },
   "profilePage": {
     "heading": "Profile",
     "description": "Your signed-in game profile.",
+    "member": "Member profile",
     "email": "Email",
-    "name": "Name",
+    "name": "Display name",
     "anonymous": "Player",
+    "noEmail": "No email on file",
     "status": "Status",
     "signedIn": "Signed in",
-    "provider": "Provider",
+    "provider": "Sign-in method",
     "google": "Google",
-    "emailProvider": "Email & password"
+    "emailProvider": "Email & password",
+    "accountId": "Account ID",
+    "gameAccess": "Game access",
+    "fullAccess": "Create, join, and host rooms",
+    "totalRooms": "Total rooms",
+    "runningRooms": "Running",
+    "endedRooms": "Ended"
   },
   "footer": {
     "tagline": "Party game nights made simple.",
-    "license": "MIT License",
     "copyright": "© 2026 TruthOrDare"
   },
   "player": {
@@ -176,6 +190,9 @@
     "questionSaved": "Question saved.",
     "customQuestionSaved": "Custom question saved for future rooms.",
     "playerUpdated": "Player name updated.",
+    "playerDeleted": "Player removed.",
+    "roomUpdated": "Room updated.",
+    "roomDeleted": "Room deleted.",
     "roomEnded": "This room has ended. Please create a new room.",
     "roomLoaded": "Room loaded.",
     "errorDefault": "Something went wrong."

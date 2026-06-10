@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import translations from '../../en.json';
+import { notifyError, notifySuccess } from '../../utils/toastConfig';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
@@ -14,7 +14,6 @@ import {
   signInUser,
   signInWithGoogle,
 } from '../../utils/firebase';
-import { exchangeIdTokenForJwt } from '../../services/authService';
 import {
   getFieldError,
   loginSchema,
@@ -56,7 +55,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn');
   const routeState = location.state as RouteState | null;
-  const redirectTo = routeState?.from?.pathname ?? '/profile';
+  const redirectTo = routeState?.from?.pathname ?? '/';
 
   function validateUsername(value: string) {
     if (mode !== 'signUp') return;
@@ -122,14 +121,13 @@ export function LoginPage() {
           email: string;
           password: string;
         };
-        const credential = await createUser(
+        sessionStorage.setItem('tod-pending-username', signUpData.username);
+        await createUser(
           signUpData.email,
           signUpData.password,
           signUpData.username,
         );
-        const idToken = await credential.user.getIdToken();
-        await exchangeIdTokenForJwt(idToken, { username: signUpData.username });
-        toast.success(translations.loginProvider.signUpSuccess);
+        notifySuccess(translations.loginProvider.signUpSuccess);
       } else {
         const methods = await getEmailSignInMethods(result.data.email);
         if (
@@ -142,14 +140,12 @@ export function LoginPage() {
             password: '',
             form: translations.loginProvider.useGoogle,
           });
-          toast.error(translations.loginProvider.useGoogle);
+          notifyError(translations.loginProvider.useGoogle);
           return;
         }
 
-        const credential = await signInUser(result.data.email, result.data.password);
-        const idToken = await credential.user.getIdToken();
-        await exchangeIdTokenForJwt(idToken);
-        toast.success(translations.loginProvider.emailSuccess);
+        await signInUser(result.data.email, result.data.password);
+        notifySuccess(translations.loginProvider.emailSuccess);
       }
       navigate(redirectTo);
     } catch (error) {
@@ -175,7 +171,7 @@ export function LoginPage() {
       }
 
       setErrors({ username: '', email: '', password: '', form: message });
-      toast.error(message);
+      notifyError(message);
     } finally {
       setLoading(false);
     }
@@ -196,10 +192,8 @@ export function LoginPage() {
     setErrors({ username: '', email: '', password: '', form: '' });
 
     try {
-      const credential = await signInWithGoogle();
-      const idToken = await credential.user.getIdToken();
-      await exchangeIdTokenForJwt(idToken);
-      toast.success(translations.loginProvider.googleSuccess);
+      await signInWithGoogle();
+      notifySuccess(translations.loginProvider.googleSuccess);
       navigate(redirectTo);
     } catch (error) {
       const code = getFirebaseCode(error);
@@ -209,7 +203,7 @@ export function LoginPage() {
           : translations.auth.errorDefault;
 
       setErrors({ username: '', email: '', password: '', form: message });
-      toast.error(message);
+      notifyError(message);
     } finally {
       setLoading(false);
     }

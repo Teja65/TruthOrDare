@@ -110,7 +110,6 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
           </div>
           <div className='footer-meta'>
-            <span>{translations.footer.license}</span>
             <span>{translations.footer.copyright}</span>
           </div>
         </div>

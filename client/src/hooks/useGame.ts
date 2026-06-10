@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { categories } from '../utils/constants';
 import { Player } from '../utils/Player';
 import { QuestionCategory, QuestionType } from '../utils/Game';
 import translations from '../en.json';
-import { getQuestionsForPool, loadQuestionBankFromApi } from '../features/questions/questionPool';
+import { getQuestionsForPool } from '../features/questions/questionPool';
 import {
   chooseBackendPrompt,
   completeBackendTurn,
-  getBackendRoom,
+  GameSnapshot,
   restartBackendGame,
   setBackendCategory,
 } from '../features/room/roomApi';
@@ -52,32 +52,21 @@ export function useGame(roomCode?: string) {
     [currentPlayerId, players, turnIndex],
   );
 
+  const applySnapshot = useCallback((snapshot: GameSnapshot) => {
+    setPlayers(snapshot.room.players);
+    setCurrentPlayerId(snapshot.currentPlayerId);
+    setCategory(snapshot.category);
+    setActiveType(snapshot.activeType);
+    setCurrentPrompt(snapshot.currentPrompt);
+  }, []);
+
   const setPlayersFromRoom = useCallback((roomPlayers: Player[]) => {
     setPlayers(roomPlayers);
     setCurrentPlayerId((current) => current || roomPlayers[0]?.id || '');
   }, []);
 
-  useEffect(() => {
-    if (!roomCode) return;
-    loadQuestionBankFromApi().catch(() => undefined);
-  }, [roomCode]);
-
-  const refreshGame = useCallback(async () => {
-    if (!roomCode) return;
-
-    try {
-      const snapshot = await getBackendRoom(roomCode);
-      setPlayers(snapshot.room.players);
-      setCurrentPlayerId(snapshot.currentPlayerId);
-      setCategory(snapshot.category);
-      setActiveType(snapshot.activeType);
-      setCurrentPrompt(snapshot.currentPrompt);
-    } catch (error) {
-      return;
-    }
-  }, [roomCode]);
-
   async function selectCategory(value: QuestionCategory) {
+    if (value === category) return;
     setCategory(value);
     setActiveType(null);
     setCurrentPrompt('');
@@ -86,10 +75,8 @@ export function useGame(roomCode?: string) {
 
     try {
       const snapshot = await setBackendCategory(roomCode, value);
-      setCategory(snapshot.category);
-      setActiveType(snapshot.activeType);
-      setCurrentPrompt(snapshot.currentPrompt);
-    } catch (error) {
+      applySnapshot(snapshot);
+    } catch {
       return;
     }
   }
@@ -101,38 +88,29 @@ export function useGame(roomCode?: string) {
     try {
       if (roomCode) {
         const snapshot = await chooseBackendPrompt(roomCode, type, category);
-        setPlayers(snapshot.room.players);
-        setCurrentPlayerId(snapshot.currentPlayerId);
-        setCategory(snapshot.category);
-        setActiveType(snapshot.activeType);
-        setCurrentPrompt(snapshot.currentPrompt);
+        applySnapshot(snapshot);
         return;
       }
+
+      const local = getLocalPrompt(type, category, questionCursors);
+      setQuestionCursors(local.nextCursors);
+      setCurrentPrompt(local.text);
     } catch {
       const local = getLocalPrompt(type, category, questionCursors);
       setQuestionCursors(local.nextCursors);
       setCurrentPrompt(local.text);
-      return;
     } finally {
-      window.setTimeout(() => setIsSpinning(false), 500);
+      window.setTimeout(() => setIsSpinning(false), 180);
     }
-
-    const local = getLocalPrompt(type, category, questionCursors);
-    setQuestionCursors(local.nextCursors);
-    setCurrentPrompt(local.text);
   }
 
   async function finishTurn(delta: number) {
     if (roomCode) {
       try {
         const snapshot = await completeBackendTurn(roomCode, delta);
-        setPlayers(snapshot.room.players);
-        setCurrentPlayerId(snapshot.currentPlayerId);
-        setCategory(snapshot.category);
-        setActiveType(snapshot.activeType);
-        setCurrentPrompt(snapshot.currentPrompt);
+        applySnapshot(snapshot);
         return;
-      } catch (error) {
+      } catch {
         return;
       }
     }
@@ -153,15 +131,11 @@ export function useGame(roomCode?: string) {
     if (roomCode) {
       try {
         const snapshot = await restartBackendGame(roomCode);
-        setPlayers(snapshot.room.players);
-        setCurrentPlayerId(snapshot.currentPlayerId);
-        setCategory(snapshot.category);
-        setActiveType(snapshot.activeType);
-        setCurrentPrompt(snapshot.currentPrompt);
+        applySnapshot(snapshot);
         setTurnIndex(0);
-        return;
-      } catch (error) {
-        return;
+        return snapshot;
+      } catch {
+        return null;
       }
     }
 
@@ -170,6 +144,7 @@ export function useGame(roomCode?: string) {
     setActiveType(null);
     setCurrentPrompt('');
     setQuestionCursors({});
+    return null;
   }
 
   return {
@@ -180,7 +155,7 @@ export function useGame(roomCode?: string) {
     currentPrompt,
     isSpinning,
     setPlayers: setPlayersFromRoom,
-    refreshGame,
+    applySnapshot,
     selectCategory,
     choosePrompt,
     finishTurn,

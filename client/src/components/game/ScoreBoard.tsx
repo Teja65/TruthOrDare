@@ -1,20 +1,23 @@
 import { useState } from 'react';
-import toast from 'react-hot-toast';
 import { Player } from '../../utils/Player';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { updateBackendPlayer } from '../../features/room/roomApi';
 import translations from '../../en.json';
+import { notifyError, notifySuccess } from '../../utils/toastConfig';
 
 type ScoreBoardProps = {
   players: Player[];
+  roomCode?: string;
   onPlayerUpdated?: (player: Player) => void;
+  onPlayerDeleted?: (playerId: string) => void;
   editable?: boolean;
 };
 
 export function ScoreBoard({
   players,
   onPlayerUpdated,
+  onPlayerDeleted,
   editable = true,
 }: ScoreBoardProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -45,12 +48,17 @@ export function ScoreBoard({
       const score = players.find((player) => player.id === playerId)?.score ?? 0;
       onPlayerUpdated?.({ id: playerId, name, score });
       setEditingId(null);
-      toast.success(translations.toast.playerUpdated);
+      notifySuccess(translations.toast.playerUpdated);
     } catch {
-      toast.error(translations.toast.errorDefault);
+      notifyError(translations.toast.errorDefault);
     } finally {
       setSaving(false);
     }
+  }
+
+  function handleDelete(playerId: string) {
+    if (!window.confirm(translations.gameRoomPage.deletePlayerConfirm)) return;
+    onPlayerDeleted?.(playerId);
   }
 
   return (
@@ -89,13 +97,25 @@ export function ScoreBoard({
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    onClick={() => startEdit(player)}
-                  >
-                    {translations.gameRoomPage.editPlayer}
-                  </Button>
+                  <>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      onClick={() => startEdit(player)}
+                    >
+                      {translations.gameRoomPage.editPlayer}
+                    </Button>
+                    {players.length > 2 && (
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        className='danger-action'
+                        onClick={() => handleDelete(player.id)}
+                      >
+                        {translations.gameRoomPage.deletePlayer}
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
             )}

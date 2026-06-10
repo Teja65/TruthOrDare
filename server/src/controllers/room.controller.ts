@@ -43,6 +43,16 @@ export async function getRoom(req: AuthRequest, res: Response) {
   res.json(withDisplayStatus(room));
 }
 
+export async function updateRoom(req: AuthRequest, res: Response) {
+  const { roomCode } = req.params;
+  const { name, status } = req.body;
+  const room = await roomService.updateRoom(roomCode, { name, status });
+  if (!room) {
+    return res.status(404).json({ message: translations.messages.roomNotFound });
+  }
+  res.json(withDisplayStatus(room));
+}
+
 export async function deleteRoom(req: AuthRequest, res: Response) {
   const { roomCode } = req.params;
   const result = await roomService.deleteRoom(roomCode);
