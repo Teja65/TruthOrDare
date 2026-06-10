@@ -3,6 +3,7 @@ import {
   createRoom,
   getRoom,
   deleteRoom,
+  updateRoom,
   joinRoom,
   leaveRoom,
   listRooms,
@@ -16,6 +17,7 @@ roomRoutes.get('/mine', authenticate, listMyRooms);
 roomRoutes.get('/', listRooms);
 roomRoutes.post('/', optionalAuthenticate, createRoom);
 roomRoutes.get('/:roomCode', getRoom);
+roomRoutes.patch('/:roomCode', updateRoom);
 roomRoutes.delete('/:roomCode', deleteRoom);
 roomRoutes.post('/:roomCode/join', joinRoom);
 roomRoutes.post('/:roomCode/leave', leaveRoom);

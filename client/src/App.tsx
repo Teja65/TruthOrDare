@@ -15,7 +15,13 @@ export function App() {
     <Provider store={store}>
       <AuthBootstrap>
         <AppRoutes />
-        <Toaster position='top-right' />
+        <Toaster
+          position='top-center'
+          toastOptions={{
+            duration: 1800,
+            style: { maxWidth: '420px' },
+          }}
+        />
       </AuthBootstrap>
     </Provider>
   );

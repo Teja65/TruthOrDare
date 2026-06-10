@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/Button';
 export function NotFoundPage() {
   return (
     <section className='page-section notfound-page'>
-      <Card className='center-card'>
+      <Card className='center-card not-found-card'>
         <h2>{translations.notFoundPage.title}</h2>
         <p>{translations.notFoundPage.message}</p>
         <Button as={Link} to='/'>

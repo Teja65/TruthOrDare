@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import translations from '../../en.json';
+import { notifyInfo } from '../../utils/toastConfig';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { RoomChoiceModal } from '../../components/room/RoomChoiceModal';
@@ -26,7 +26,7 @@ export function HomePage() {
       if (running.length) {
         setMyRooms(rooms);
         setChoiceOpen(true);
-        toast(translations.homePage.roomChoiceToast, { icon: 'ℹ️' });
+        notifyInfo(translations.homePage.roomChoiceToast);
         return;
       }
       navigate('/create');

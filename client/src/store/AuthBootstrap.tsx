@@ -13,7 +13,6 @@ import {
   exchangeIdTokenForJwt,
   getStoredAuthToken,
 } from '../services/authService';
-import translations from '../en.json';
 
 type AuthBootstrapProps = {
   children: ReactNode;
@@ -28,35 +27,79 @@ export function AuthBootstrap({ children }: AuthBootstrapProps) {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
         clearStoredAuthToken();
         dispatch(clearAuth());
         return;
       }
 
-      try {
-        const idToken = await user.getIdToken();
-        const result = await exchangeIdTokenForJwt(idToken);
-        dispatch(setHasToken(Boolean(getStoredAuthToken())));
-        dispatch(
-          authChanged({
-            displayName: result.user?.username ?? user.displayName,
-            email: user.email,
-            uid: user.uid,
-            provider: result.user?.provider,
-          }),
-        );
-      } catch (error) {
-        console.warn(translations.auth.exchangeWarning, error);
-        dispatch(
-          authChanged({
-            displayName: user.displayName,
-            email: user.email,
-            uid: user.uid,
-          }),
-        );
+      dispatch(
+        authChanged({
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+          uid: user.uid,
+        }),
+      );
+
+      const existingToken = getStoredAuthToken();
+      if (existingToken) {
+        dispatch(setHasToken(true));
+        dispatch(setAuthLoading(false));
+        void user
+          .getIdToken()
+          .then((idToken) => {
+            const pendingUsername = sessionStorage.getItem('tod-pending-username');
+            sessionStorage.removeItem('tod-pending-username');
+            return exchangeIdTokenForJwt(idToken, {
+              username: pendingUsername ?? undefined,
+            });
+          })
+          .then((result) => {
+            if (result.user) {
+              dispatch(
+                authChanged({
+                  displayName: result.user.username ?? user.displayName,
+                  email: user.email,
+                  photoURL: user.photoURL,
+                  uid: user.uid,
+                  provider: result.user.provider,
+                }),
+              );
+            }
+          })
+          .catch(() => undefined);
+        return;
       }
+
+      void user
+        .getIdToken()
+        .then((idToken) => {
+          const pendingUsername = sessionStorage.getItem('tod-pending-username');
+          sessionStorage.removeItem('tod-pending-username');
+          return exchangeIdTokenForJwt(idToken, {
+            username: pendingUsername ?? undefined,
+          });
+        })
+        .then((result) => {
+          dispatch(setHasToken(Boolean(getStoredAuthToken())));
+          dispatch(
+            authChanged({
+              displayName: result.user?.username ?? user.displayName,
+              email: user.email,
+              photoURL: user.photoURL,
+              uid: user.uid,
+              provider: result.user?.provider,
+            }),
+          );
+        })
+        .catch(() => {
+          dispatch(setHasToken(false));
+        })
+        .finally(() => {
+          dispatch(setAuthLoading(false));
+        });
     });
 
     return unsubscribe;

@@ -230,11 +230,11 @@ export async function restartGame(roomCode: string) {
     throw new Error(translations.messages.roomNotFound);
   }
 
-  await Player.updateMany({ roomCode: room.roomCode }, { score: 0 });
+  await Player.updateMany({ roomCode: room.roomCode }, { $set: { score: 0 } });
   room.status = 'active';
   room.questionCursors = {};
   room.markModified('questionCursors');
-  room.gameState = {
+  room.set('gameState', {
     currentTurn: 1,
     currentPlayer: room.players[0]?._id,
     currentCategory: loadTranslations().categories[0] as any,
@@ -243,12 +243,16 @@ export async function restartGame(roomCode: string) {
       player: player._id,
       score: 0,
     })),
-  } as any;
-
+  });
+  room.markModified('gameState');
   await room.save();
-  return Room.findOne({ roomCode: roomCode.toUpperCase() })
-    .populate('players')
-    .populate('gameState.currentPlayer');
+
+  await room.populate('players');
+  await room.populate('gameState.currentPlayer');
+  room.players.forEach((player: any) => {
+    player.score = 0;
+  });
+  return room;
 }
 
 export async function endGame(roomCode: string) {

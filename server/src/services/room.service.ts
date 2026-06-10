@@ -65,6 +65,19 @@ export async function getRoomByCode(roomCode: string) {
     .populate('gameState.currentPlayer');
 }
 
+export async function updateRoom(
+  roomCode: string,
+  data: Partial<{ name: string; status: 'waiting' | 'active' | 'ended' }>,
+) {
+  return Room.findOneAndUpdate(
+    { roomCode: roomCode.toUpperCase() },
+    data,
+    { new: true },
+  )
+    .populate('players')
+    .populate('gameState.currentPlayer');
+}
+
 export async function deleteRoom(roomCode: string) {
   const room = await Room.findOne({ roomCode: roomCode.toUpperCase() });
   if (!room) {

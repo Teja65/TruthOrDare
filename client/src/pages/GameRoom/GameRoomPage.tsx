@@ -1,22 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import translations from '../../en.json';
 import { PlayerTurn } from '../../components/game/PlayerTurn';
 import { ScoreBoard } from '../../components/game/ScoreBoard';
 import { RoomInfo } from '../../components/room/RoomInfo';
 import { Button } from '../../components/ui/Button';
-import { endBackendGame } from '../../features/room/roomApi';
+import {
+  endBackendGame,
+  getBackendRoom,
+  removeBackendPlayer,
+} from '../../features/room/roomApi';
 import { useGame } from '../../hooks/useGame';
-import { useRoom } from '../../hooks/useRoom';
 import type { QuestionCategory } from '../../utils/Game';
 import type { Player } from '../../utils/Player';
+import { notifyError, notifySuccess } from '../../utils/toastConfig';
 
 export function GameRoomPage() {
   const { roomCode: routeRoomCode = '' } = useParams();
   const [isEnded, setIsEnded] = useState(false);
   const [roomStatus, setRoomStatus] = useState<'running' | 'ended'>('running');
-  const { roomCode, room, loadRoom, loading } = useRoom();
+  const [loading, setLoading] = useState(true);
   const {
     players,
     currentPlayer,
@@ -29,41 +32,25 @@ export function GameRoomPage() {
     restartGame,
     setPlayers,
     isSpinning,
-    refreshGame,
+    applySnapshot,
   } = useGame(routeRoomCode);
 
   useEffect(() => {
     if (!routeRoomCode) return;
 
-    loadRoom(routeRoomCode)
-      .then((loadedRoom) => {
-        const ended = loadedRoom.displayStatus === 'ended';
-        setRoomStatus(loadedRoom.displayStatus ?? 'running');
-        setPlayers(loadedRoom.players);
-        if (ended) {
-          setIsEnded(true);
-        }
+    setLoading(true);
+    getBackendRoom(routeRoomCode)
+      .then((snapshot) => {
+        applySnapshot(snapshot);
+        const ended = snapshot.displayStatus === 'ended';
+        setRoomStatus(snapshot.displayStatus);
+        if (ended) setIsEnded(true);
       })
-      .catch(() => {
-        toast.error(translations.form.errors.roomNotFound);
-      });
-  }, [loadRoom, routeRoomCode, setPlayers]);
+      .catch(() => notifyError(translations.form.errors.roomNotFound))
+      .finally(() => setLoading(false));
+  }, [applySnapshot, routeRoomCode]);
 
-  useEffect(() => {
-    if (room.players.length) {
-      setPlayers(room.players);
-    }
-    if (room.displayStatus) {
-      setRoomStatus(room.displayStatus);
-    }
-  }, [room.displayStatus, room.players, setPlayers]);
-
-  useEffect(() => {
-    refreshGame();
-  }, [refreshGame]);
-
-  const canPlay = room.players.length >= 2 && roomStatus === 'running';
-  const playerCount = room.players.length;
+  const canPlay = players.length >= 2 && roomStatus === 'running';
   const sortedResults = useMemo(
     () => [...players].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name)),
     [players],
@@ -71,62 +58,63 @@ export function GameRoomPage() {
   const winner = sortedResults[0];
 
   function handlePlayerUpdated(player: Player) {
-    setPlayers(
-      players.map((item) =>
-        item.id === player.id ? { ...item, name: player.name } : item,
-      ),
-    );
+    setPlayers(players.map((item) => (item.id === player.id ? player : item)));
   }
 
-  async function handleCategorySelect(item: QuestionCategory) {
-    await selectCategory(item);
-    toast.success(translations.toast.categoryUpdated);
+  async function handlePlayerDeleted(playerId: string) {
+    try {
+      await removeBackendPlayer(routeRoomCode, playerId);
+      setPlayers(players.filter((player) => player.id !== playerId));
+      notifySuccess(translations.toast.playerDeleted);
+    } catch {
+      notifyError(translations.toast.errorDefault);
+    }
   }
 
-  async function handlePrompt(type: 'truth' | 'dare') {
-    await choosePrompt(type);
-    toast.success(translations.toast.promptReady);
+  function handleCategorySelect(item: QuestionCategory) {
+    if (item === category) return;
+    void selectCategory(item);
   }
 
-  async function handleTurn(delta: number) {
-    await finishTurn(delta);
-    toast.success(
-      delta > 0
-        ? translations.toast.turnCompleted
-        : translations.toast.turnSkipped,
-    );
+  function handlePrompt(type: 'truth' | 'dare') {
+    void choosePrompt(type);
+  }
+
+  function handleTurn(delta: number) {
+    void finishTurn(delta);
   }
 
   async function handleRestart() {
     setIsEnded(false);
     setRoomStatus('running');
-    await restartGame();
-    toast.success(translations.toast.gameRestarted);
+    const snapshot = await restartGame();
+    if (snapshot) {
+      applySnapshot(snapshot);
+      notifySuccess(translations.toast.gameRestarted);
+    }
   }
 
   async function handleEndGame() {
     try {
-      if (routeRoomCode) {
-        await endBackendGame(routeRoomCode);
-      }
+      await endBackendGame(routeRoomCode);
       setRoomStatus('ended');
       setIsEnded(true);
-      toast.success(translations.toast.gameEnded);
+      notifySuccess(translations.toast.gameEnded);
     } catch {
-      toast.error(translations.toast.errorDefault);
+      notifyError(translations.toast.errorDefault);
     }
   }
 
   if (loading) {
-    return <section className='page-section'>{translations.app.loading}</section>;
+    return <section className='page-section page-centered'>{translations.app.loading}</section>;
   }
 
   return (
-    <section className='page-section room-page'>
+    <section className='page-section room-page page-centered'>
       <div className='room-grid'>
         <RoomInfo
-          roomCode={roomCode || routeRoomCode}
-          playerCount={playerCount}
+          roomCode={routeRoomCode}
+          playerCount={players.length}
           displayStatus={roomStatus}
         />
         <div className='game-panel'>
@@ -193,14 +181,14 @@ export function GameRoomPage() {
               <button
                 className='secondary-button'
                 type='button'
-                onClick={handleRestart}
+                onClick={() => void handleRestart()}
               >
                 {translations.buttons.restart}
               </button>
               <button
                 className='secondary-button danger-action'
                 type='button'
-                onClick={handleEndGame}
+                onClick={() => void handleEndGame()}
               >
                 {translations.gameRoomPage.endGame}
               </button>
@@ -209,7 +197,9 @@ export function GameRoomPage() {
         </div>
         <ScoreBoard
           players={players}
+          roomCode={routeRoomCode}
           onPlayerUpdated={handlePlayerUpdated}
+          onPlayerDeleted={handlePlayerDeleted}
           editable={roomStatus === 'running'}
         />
       </div>
