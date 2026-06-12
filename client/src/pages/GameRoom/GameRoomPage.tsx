@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import translations from '../../en.json';
 import { PlayerTurn } from '../../components/game/PlayerTurn';
 import { ScoreBoard } from '../../components/game/ScoreBoard';
@@ -9,6 +9,7 @@ import {
   endBackendGame,
   getBackendRoom,
   removeBackendPlayer,
+  type GameSnapshot,
 } from '../../features/room/roomApi';
 import { useGame } from '../../hooks/useGame';
 import type { QuestionCategory } from '../../utils/Game';
@@ -16,10 +17,13 @@ import type { Player } from '../../utils/Player';
 import { notifyError, notifySuccess } from '../../utils/toastConfig';
 
 export function GameRoomPage() {
+  const location = useLocation();
   const { roomCode: routeRoomCode = '' } = useParams();
+  const initialSnapshot = (location.state as { snapshot?: GameSnapshot } | null)
+    ?.snapshot;
   const [isEnded, setIsEnded] = useState(false);
   const [roomStatus, setRoomStatus] = useState<'running' | 'ended'>('running');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialSnapshot);
   const {
     players,
     currentPlayer,
@@ -38,6 +42,17 @@ export function GameRoomPage() {
   useEffect(() => {
     if (!routeRoomCode) return;
 
+    if (
+      initialSnapshot &&
+      initialSnapshot.room.code.toUpperCase() === routeRoomCode.toUpperCase()
+    ) {
+      applySnapshot(initialSnapshot);
+      setRoomStatus(initialSnapshot.displayStatus);
+      if (initialSnapshot.displayStatus === 'ended') setIsEnded(true);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     getBackendRoom(routeRoomCode)
       .then((snapshot) => {
@@ -48,7 +63,7 @@ export function GameRoomPage() {
       })
       .catch(() => notifyError(translations.form.errors.roomNotFound))
       .finally(() => setLoading(false));
-  }, [applySnapshot, routeRoomCode]);
+  }, [applySnapshot, initialSnapshot, routeRoomCode]);
 
   const canPlay = players.length >= 2 && roomStatus === 'running';
   const sortedResults = useMemo(
@@ -89,7 +104,6 @@ export function GameRoomPage() {
     setRoomStatus('running');
     const snapshot = await restartGame();
     if (snapshot) {
-      applySnapshot(snapshot);
       notifySuccess(translations.toast.gameRestarted);
     }
   }

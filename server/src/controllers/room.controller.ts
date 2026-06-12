@@ -28,8 +28,18 @@ export async function listMyRooms(req: AuthRequest, res: Response) {
 }
 
 export async function createRoom(req: AuthRequest, res: Response) {
-  const { name, hostName, roomCode } = req.body;
+  const { name, hostName, roomCode, playerNames } = req.body;
   const ownerUid = req.user?.uid as string | undefined;
+
+  if (Array.isArray(playerNames) && playerNames.length >= 2) {
+    const room = await roomService.setupRoomWithPlayers(
+      playerNames,
+      roomCode,
+      ownerUid,
+    );
+    return res.status(201).json(withDisplayStatus(room));
+  }
+
   const room = await roomService.createRoom(name, hostName, roomCode, ownerUid);
   res.status(201).json(withDisplayStatus(room));
 }

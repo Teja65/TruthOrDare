@@ -9,7 +9,6 @@ import {
   completeBackendTurn,
   GameSnapshot,
   restartBackendGame,
-  setBackendCategory,
 } from '../features/room/roomApi';
 
 function getLocalPrompt(
@@ -70,15 +69,6 @@ export function useGame(roomCode?: string) {
     setCategory(value);
     setActiveType(null);
     setCurrentPrompt('');
-
-    if (!roomCode) return;
-
-    try {
-      const snapshot = await setBackendCategory(roomCode, value);
-      applySnapshot(snapshot);
-    } catch {
-      return;
-    }
   }
 
   async function choosePrompt(type: QuestionType) {

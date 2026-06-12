@@ -55,10 +55,10 @@ export function JoinRoomPage() {
 
     setSubmitting(true);
     try {
-      const room = await joinRoom(result.data.roomCode, result.data.playerName);
+      const snapshot = await joinRoom(result.data.roomCode, result.data.playerName);
       setErrors({ roomCode: '', playerName: '', form: '' });
       toast.success(translations.toast.roomJoined);
-      navigate(`/room/${room.code}`);
+      navigate(`/room/${snapshot.room.code}`, { state: { snapshot } });
     } catch (error) {
       const message =
         error instanceof Error && error.message.includes('ended')

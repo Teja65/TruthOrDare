@@ -2,6 +2,7 @@ import { Room } from '../models/Room';
 import { Player } from '../models/Player';
 import { generateRoomCode } from '../utils/roomCodeGenerator';
 import { toDisplayStatus } from '../utils/roomStatus';
+import { getPopulatedRoom } from '../utils/populateRoom';
 import translations from '../en.json';
 
 function mapRoomSummary(room: any) {
@@ -19,15 +20,17 @@ function mapRoomSummary(room: any) {
 
 export async function listAllRooms() {
   const rooms = await Room.find()
-    .populate('players')
-    .sort({ updatedAt: -1 });
+    .select('roomCode name status ownerUid updatedAt createdAt players')
+    .sort({ updatedAt: -1 })
+    .lean();
   return rooms.map(mapRoomSummary);
 }
 
 export async function listRoomsByOwner(ownerUid: string) {
   const rooms = await Room.find({ ownerUid })
-    .populate('players')
-    .sort({ updatedAt: -1 });
+    .select('roomCode name status ownerUid updatedAt createdAt players')
+    .sort({ updatedAt: -1 })
+    .lean();
   return rooms.map(mapRoomSummary);
 }
 
@@ -59,10 +62,47 @@ export async function createRoom(
   return room;
 }
 
+export async function setupRoomWithPlayers(
+  playerNames: string[],
+  requestedRoomCode?: string,
+  ownerUid?: string,
+) {
+  const roomCode = (requestedRoomCode || generateRoomCode()).toUpperCase();
+  const names = playerNames.map((name) => name.trim()).filter(Boolean);
+
+  if (names.length < 2) {
+    throw new Error(translations.messages.playerRequired);
+  }
+
+  const players = await Promise.all(
+    names.map((name) => Player.create({ name, roomCode, score: 0 })),
+  );
+
+  await Room.create({
+    roomCode,
+    name: `${translations.messages.roomNamePrefix} ${roomCode}`,
+    ownerUid,
+    hostId: players[0]._id,
+    players: players.map((player) => player._id),
+    status: 'active',
+    questionCursors: {},
+    gameState: {
+      currentTurn: 1,
+      currentPlayer: players[0]._id,
+      currentCategory: translations.categories[0],
+      scores: players.map((player) => ({ player: player._id, score: 0 })),
+    },
+  });
+
+  const room = await getPopulatedRoom(roomCode);
+  if (!room) {
+    throw new Error(translations.messages.roomNotFound);
+  }
+  return room;
+}
+
 export async function getRoomByCode(roomCode: string) {
-  return Room.findOne({ roomCode: roomCode.toUpperCase() })
-    .populate('players')
-    .populate('gameState.currentPlayer');
+  return getPopulatedRoom(roomCode);
 }
 
 export async function updateRoom(
@@ -115,7 +155,8 @@ export async function joinRoom(roomCode: string, playerName: string) {
   gameState.scores.push({ player: player._id, score: 0 });
   await room.save();
 
-  return { room, player };
+  const populated = await getPopulatedRoom(room.roomCode);
+  return { room: populated ?? room, player };
 }
 
 export async function leaveRoom(roomCode: string, playerId: string) {

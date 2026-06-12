@@ -6,6 +6,7 @@ import {
   loadTranslations,
   normalizeCategory,
 } from './question.service';
+import { populateGameRoom } from '../utils/populateRoom';
 import translations from '../en.json';
 
 function readPoolCursor(room: any, poolKey: string) {
@@ -150,9 +151,7 @@ async function selectQuestion(
 
   room.markModified('gameState');
   await room.save();
-  return Room.findOne({ roomCode: roomCode.toUpperCase() })
-    .populate('players')
-    .populate('gameState.currentPlayer');
+  return populateGameRoom(room);
 }
 
 export function selectTruth(roomCode: string, category?: string) {
@@ -217,9 +216,7 @@ export async function completeTurn(roomCode: string, delta: number) {
   gameState.currentQuestion = undefined;
 
   await room.save();
-  return Room.findOne({ roomCode: roomCode.toUpperCase() })
-    .populate('players')
-    .populate('gameState.currentPlayer');
+  return populateGameRoom(room);
 }
 
 export async function restartGame(roomCode: string) {
@@ -247,12 +244,10 @@ export async function restartGame(roomCode: string) {
   room.markModified('gameState');
   await room.save();
 
-  await room.populate('players');
-  await room.populate('gameState.currentPlayer');
   room.players.forEach((player: any) => {
     player.score = 0;
   });
-  return room;
+  return populateGameRoom(room);
 }
 
 export async function endGame(roomCode: string) {
