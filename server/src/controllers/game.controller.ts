@@ -16,7 +16,7 @@ function withDisplayStatus(room: any) {
 export async function startGame(req: Request, res: Response) {
   const { roomCode } = req.params;
   const game = await gameService.startGame(roomCode);
-  res.json(game);
+  res.json(withDisplayStatus(game));
 }
 
 export async function getGame(req: Request, res: Response) {

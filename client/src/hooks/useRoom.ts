@@ -1,11 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Room } from '../utils/Room';
 import { Player } from '../utils/Player';
-import {
-  createBackendRoom,
-  getBackendRoom,
-  joinBackendRoom,
-} from '../features/room/roomApi';
+import { setupBackendRoom, joinBackendRoom, getBackendRoom } from '../features/room/roomApi';
 import { generateRoomCode } from '../utils/generateRoomCode';
 import translations from '../en.json';
 
@@ -29,38 +25,27 @@ export function useRoom() {
       const snapshot = await getBackendRoom(roomCode);
       setRoom(snapshot.room);
       setStatusMessage('');
-      return snapshot.room;
+      return snapshot;
     } finally {
       setLoading(false);
     }
   }, []);
 
   async function createRoom(players: Player[]) {
-    const namedPlayers = players.filter((player) => player.name.trim());
-    const snapshot = await createBackendRoom(
-      namedPlayers[0].name.trim(),
-      room.code,
-    );
-    let latestRoom = snapshot.room;
-
-    for (const player of namedPlayers.slice(1)) {
-      const joined = await joinBackendRoom(
-        snapshot.room.code,
-        player.name.trim(),
-      );
-      latestRoom = joined.room;
-    }
-
-    setRoom(latestRoom);
+    const playerNames = players
+      .map((player) => player.name.trim())
+      .filter(Boolean);
+    const snapshot = await setupBackendRoom(room.code, playerNames);
+    setRoom(snapshot.room);
     setStatusMessage('');
-    return latestRoom;
+    return snapshot;
   }
 
   async function joinRoom(code: string, playerName: string) {
     const snapshot = await joinBackendRoom(code.trim(), playerName.trim());
     setRoom(snapshot.room);
     setStatusMessage('');
-    return snapshot.room;
+    return snapshot;
   }
 
   function setPlayers(players: Player[]) {

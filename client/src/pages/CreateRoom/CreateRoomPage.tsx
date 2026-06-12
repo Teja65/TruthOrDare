@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import { z } from 'zod';
 import translations from '../../en.json';
 import { Button } from '../../components/ui/Button';
@@ -10,11 +9,11 @@ import { PlayerList } from '../../components/room/PlayerList';
 import { usePlayers } from '../../hooks/usePlayers';
 import { useRoom } from '../../hooks/useRoom';
 import { playerNameSchema } from '../../utils/validation';
-import { startBackendGame } from '../../features/room/roomApi';
+import { notifyError, notifySuccess } from '../../utils/toastConfig';
 
 export function CreateRoomPage() {
   const navigate = useNavigate();
-  const { roomCode, createRoom, setPlayers, statusMessage } = useRoom();
+  const { roomCode, createRoom, statusMessage } = useRoom();
   const { players, addPlayer, updatePlayerName, removePlayer } = usePlayers();
   const [playerName, setPlayerName] = useState('');
   const [playerError, setPlayerError] = useState('');
@@ -73,14 +72,12 @@ export function CreateRoomPage() {
 
     setSubmitting(true);
     try {
-      const room = await createRoom(result.data);
-      await startBackendGame(room.code);
-      setPlayers(room.players);
-      toast.success(translations.toast.roomCreated);
-      navigate(`/room/${room.code}`);
+      const snapshot = await createRoom(result.data);
+      notifySuccess(translations.toast.roomCreated);
+      navigate(`/room/${snapshot.room.code}`, { state: { snapshot } });
     } catch (error) {
       setStartError(translations.form.errors.backendUnavailable);
-      toast.error(translations.toast.errorDefault);
+      notifyError(translations.toast.errorDefault);
     } finally {
       setSubmitting(false);
     }

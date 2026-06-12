@@ -1,38 +1,19 @@
-import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import translations from '../../en.json';
-import { notifyInfo } from '../../utils/toastConfig';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { RoomChoiceModal } from '../../components/room/RoomChoiceModal';
-import { listMyRooms, type RoomSummary } from '../../features/room/roomApi';
 import { useAuth } from '../../store/useAuth';
 
 export function HomePage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const [choiceOpen, setChoiceOpen] = useState(false);
-  const [myRooms, setMyRooms] = useState<RoomSummary[]>([]);
 
-  async function handleCreateClick() {
+  function handleCreateClick() {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: { pathname: '/create' } } });
       return;
     }
-
-    try {
-      const rooms = await listMyRooms();
-      const running = rooms.filter((room) => room.displayStatus === 'running');
-      if (running.length) {
-        setMyRooms(rooms);
-        setChoiceOpen(true);
-        notifyInfo(translations.homePage.roomChoiceToast);
-        return;
-      }
-      navigate('/create');
-    } catch {
-      navigate('/create');
-    }
+    navigate('/create');
   }
 
   return (
@@ -63,15 +44,6 @@ export function HomePage() {
           </Card>
         ))}
       </div>
-      <RoomChoiceModal
-        open={choiceOpen}
-        rooms={myRooms}
-        onClose={() => setChoiceOpen(false)}
-        onCreateNew={() => {
-          setChoiceOpen(false);
-          navigate('/create');
-        }}
-      />
     </section>
   );
 }

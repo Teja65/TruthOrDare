@@ -119,12 +119,48 @@ export function mapServerRoom(serverRoom: ServerRoom): GameSnapshot {
   };
 }
 
-export async function listAllRooms() {
-  return fetchApi<RoomSummary[]>('/rooms');
+let myRoomsCache: { data: RoomSummary[]; at: number } | null = null;
+let allRoomsCache: { data: RoomSummary[]; at: number } | null = null;
+const ROOMS_CACHE_MS = 45_000;
+
+export async function listAllRooms(force = false) {
+  if (
+    !force &&
+    allRoomsCache &&
+    Date.now() - allRoomsCache.at < ROOMS_CACHE_MS
+  ) {
+    return allRoomsCache.data;
+  }
+  const data = await fetchApi<RoomSummary[]>('/rooms');
+  allRoomsCache = { data, at: Date.now() };
+  return data;
 }
 
-export async function listMyRooms() {
-  return fetchApi<RoomSummary[]>('/rooms/mine');
+export async function listMyRooms(force = false) {
+  if (
+    !force &&
+    myRoomsCache &&
+    Date.now() - myRoomsCache.at < ROOMS_CACHE_MS
+  ) {
+    return myRoomsCache.data;
+  }
+  const data = await fetchApi<RoomSummary[]>('/rooms/mine');
+  myRoomsCache = { data, at: Date.now() };
+  return data;
+}
+
+export function clearRoomsCache() {
+  myRoomsCache = null;
+  allRoomsCache = null;
+}
+
+export async function setupBackendRoom(roomCode: string, playerNames: string[]) {
+  const room = await fetchApi<ServerRoom>('/rooms', {
+    method: 'POST',
+    body: JSON.stringify({ roomCode, playerNames }),
+  });
+  clearRoomsCache();
+  return mapServerRoom(room);
 }
 
 export async function createBackendRoom(hostName: string, roomCode: string) {
@@ -141,11 +177,14 @@ export async function getBackendRoom(roomCode: string) {
 }
 
 export async function joinBackendRoom(roomCode: string, playerName: string) {
-  await fetchApi(`/rooms/${roomCode}/join`, {
-    method: 'POST',
-    body: JSON.stringify({ playerName }),
-  });
-  return getBackendRoom(roomCode);
+  const payload = await fetchApi<{ room: ServerRoom }>(
+    `/rooms/${roomCode}/join`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ playerName }),
+    },
+  );
+  return mapServerRoom(payload.room);
 }
 
 export async function updateBackendPlayer(playerId: string, name: string) {
@@ -216,7 +255,8 @@ export async function updateBackendRoom(
 }
 
 export async function deleteBackendRoom(roomCode: string) {
-  return fetchApi(`/rooms/${roomCode}`, { method: 'DELETE' });
+  await fetchApi(`/rooms/${roomCode}`, { method: 'DELETE' });
+  clearRoomsCache();
 }
 
 export async function removeBackendPlayer(roomCode: string, playerId: string) {
