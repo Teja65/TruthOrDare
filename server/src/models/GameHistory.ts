@@ -59,4 +59,8 @@ const gameHistorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+gameHistorySchema.index({ endedAt: -1 });
+gameHistorySchema.index({ roomCode: 1, endedAt: -1 });
+gameHistorySchema.index({ 'players.playerId': 1 });
+
 export const GameHistory = mongoose.model('GameHistory', gameHistorySchema);

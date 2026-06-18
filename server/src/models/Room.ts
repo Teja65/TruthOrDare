@@ -77,4 +77,8 @@ const roomSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+roomSchema.index({ updatedAt: -1 });
+roomSchema.index({ ownerUid: 1, updatedAt: -1 });
+roomSchema.index({ status: 1, updatedAt: -1 });
+
 export const Room = mongoose.model('Room', roomSchema);

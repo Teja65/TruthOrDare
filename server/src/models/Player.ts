@@ -10,6 +10,7 @@ const playerSchema = new mongoose.Schema(
     roomCode: {
       type: String,
       required: true,
+      uppercase: true,
       index: true,
     },
     score: {
@@ -29,5 +30,7 @@ const playerSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+playerSchema.index({ roomCode: 1, createdAt: 1 });
 
 export const Player = mongoose.model('Player', playerSchema);

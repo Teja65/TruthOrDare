@@ -5,6 +5,12 @@ import { toDisplayStatus } from '../utils/roomStatus';
 import { getPopulatedRoom } from '../utils/populateRoom';
 import translations from '../en.json';
 
+async function populateRoom(room: any) {
+  await room.populate('players');
+  await room.populate('gameState.currentPlayer');
+  return room;
+}
+
 function mapRoomSummary(room: any) {
   return {
     roomCode: room.roomCode,
@@ -59,7 +65,7 @@ export async function createRoom(
   }
 
   const room = await Room.create(record);
-  return room;
+  return populateRoom(room);
 }
 
 export async function setupRoomWithPlayers(
@@ -74,11 +80,11 @@ export async function setupRoomWithPlayers(
     throw new Error(translations.messages.playerRequired);
   }
 
-  const players = await Promise.all(
-    names.map((name) => Player.create({ name, roomCode, score: 0 })),
+  const players = await Player.insertMany(
+    names.map((name) => ({ name, roomCode, score: 0 })),
   );
 
-  await Room.create({
+  const room = await Room.create({
     roomCode,
     name: `${translations.messages.roomNamePrefix} ${roomCode}`,
     ownerUid,
@@ -94,11 +100,7 @@ export async function setupRoomWithPlayers(
     },
   });
 
-  const room = await getPopulatedRoom(roomCode);
-  if (!room) {
-    throw new Error(translations.messages.roomNotFound);
-  }
-  return room;
+  return populateRoom(room);
 }
 
 export async function getRoomByCode(roomCode: string) {
@@ -129,7 +131,10 @@ export async function deleteRoom(roomCode: string) {
 }
 
 export async function joinRoom(roomCode: string, playerName: string) {
-  const room = await Room.findOne({ roomCode: roomCode.toUpperCase() });
+  const normalizedRoomCode = roomCode.toUpperCase();
+  const room = await Room.findOne({ roomCode: normalizedRoomCode }).select(
+    'roomCode status',
+  );
   if (!room) {
     throw new Error(translations.messages.roomNotFound);
   }
@@ -143,20 +148,25 @@ export async function joinRoom(roomCode: string, playerName: string) {
     roomCode: room.roomCode,
     score: 0,
   });
-  room.players.push(player._id);
-  const gameState: any =
-    room.gameState ??
-    (room.gameState = {
-      currentTurn: 0,
-      currentCategory: translations.categories[0],
-      scores: [],
-    } as any);
-  gameState.scores = gameState.scores || [];
-  gameState.scores.push({ player: player._id, score: 0 });
-  await room.save();
+  const updatedRoom = await Room.findOneAndUpdate(
+    { roomCode: room.roomCode, status: { $ne: 'ended' } },
+    {
+      $push: {
+        players: player._id,
+        'gameState.scores': { player: player._id, score: 0 },
+      },
+    },
+    { new: true },
+  )
+    .populate('players')
+    .populate('gameState.currentPlayer');
 
-  const populated = await getPopulatedRoom(room.roomCode);
-  return { room: populated ?? room, player };
+  if (!updatedRoom) {
+    await Player.findByIdAndDelete(player._id);
+    throw new Error(translations.messages.roomEnded);
+  }
+
+  return { room: updatedRoom, player };
 }
 
 export async function leaveRoom(roomCode: string, playerId: string) {
