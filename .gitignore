@@ -6,3 +6,4 @@ vite.config.d.ts
 .env
 .env.local
 .env.*.local
+load-tests/
