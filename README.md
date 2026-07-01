@@ -80,6 +80,8 @@ Create a **Web Service** pointing at the `server` folder.
 | `FIREBASE_PROJECT_ID`  | Yes      | Firebase project ID |
 | `FIREBASE_CLIENT_EMAIL`| Yes      | Service account email from Firebase JSON key |
 | `FIREBASE_PRIVATE_KEY` | Yes      | Private key from JSON key. Paste with `\n` for newlines, or wrap in quotes as in `.env.example` |
+| `CLIENT_URL`           | No       | Primary frontend URL, e.g. `https://your-app.vercel.app` |
+| `CLIENT_URLS`          | No       | Comma-separated extra allowed frontend URLs |
 | `PORT`                 | No       | Render sets this automatically |
 
 **Render build & start commands:**
@@ -93,7 +95,7 @@ Create a **Web Service** pointing at the `server` folder.
 
 After deploy, note your API URL, e.g. `https://truth-or-dare-api.onrender.com`
 
-Health check: open `https://YOUR-RENDER-URL/api/rooms` (should return JSON).
+Health check: open `https://YOUR-RENDER-URL/health` (should return JSON).
 
 ---
 
@@ -157,7 +159,7 @@ Import the repo and set **Root Directory** to `client`.
 
 ## Production notes
 
-- **CORS:** The server allows all origins (`cors({ origin: true })`), so the Vercel app can call the Render API.
+- **CORS:** The server allows local dev, configured `CLIENT_URL`/`CLIENT_URLS`, and Vercel app domains.
 - **Render free tier:** The service sleeps after inactivity; the first request may take 30–60 seconds.
 - **Custom questions:** Saved to `en.json` on the server filesystem. On Render, those writes are **ephemeral** (lost on redeploy). For permanent custom questions in production, use MongoDB or object storage later.
 - **Secrets:** Never commit `.env`. Use placeholders in `.env.example` only.

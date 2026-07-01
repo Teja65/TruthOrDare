@@ -11,6 +11,10 @@ import { errorHandler } from './middleware/error.middleware';
 
 const app = express();
 
+function normalizeOrigin(origin?: string) {
+  return origin?.trim().replace(/\/$/, '');
+}
+
 const allowedOrigins = new Set(
   [
     process.env.CLIENT_URL,
@@ -19,18 +23,37 @@ const allowedOrigins = new Set(
     'http://127.0.0.1:5173',
     'https://truth-or-dare-eta-five.vercel.app',
   ]
-    .map((origin) => origin?.trim().replace(/\/$/, ''))
+    .map(normalizeOrigin)
     .filter(Boolean),
 );
 
+function isAllowedOrigin(origin: string) {
+  const normalizedOrigin = normalizeOrigin(origin);
+  if (!normalizedOrigin) {
+    return false;
+  }
+
+  try {
+    const url = new URL(normalizedOrigin);
+    return (
+      allowedOrigins.has(normalizedOrigin) ||
+      (url.protocol === 'https:' && url.hostname.endsWith('.vercel.app'))
+    );
+  } catch {
+    return false;
+  }
+}
+
 const corsOptions = {
   origin(origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) {
-    if (!origin || allowedOrigins.has(origin.replace(/\/$/, ''))) {
+    if (!origin || isAllowedOrigin(origin)) {
       callback(null, true);
       return;
     }
 
-    callback(new Error(`CORS blocked origin: ${origin}`));
+    const error = new Error(`CORS blocked origin: ${origin}`);
+    (error as Error & { status?: number }).status = 403;
+    callback(error);
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -45,6 +68,13 @@ app.get('/', (_req, res) => {
   res.status(200).json({
     success: true,
     message: 'TruthOrDare API is running',
+  });
+});
+
+app.get('/health', (_req, res) => {
+  res.status(200).json({
+    success: true,
+    status: 'ok',
   });
 });
 
