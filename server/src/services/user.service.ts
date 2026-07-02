@@ -6,14 +6,31 @@ export async function upsertUser(data: {
   username: string;
   provider: 'google' | 'password';
 }) {
+  const hasEmail = Boolean(data.email);
+  const query = hasEmail
+    ? { $or: [{ uid: data.uid }, { email: data.email }] }
+    : { uid: data.uid };
+  const update = hasEmail
+    ? {
+        $set: {
+          uid: data.uid,
+          email: data.email,
+          username: data.username,
+          provider: data.provider,
+        },
+      }
+    : {
+        $set: {
+          uid: data.uid,
+          username: data.username,
+          provider: data.provider,
+        },
+        $unset: { email: '' },
+      };
+
   return User.findOneAndUpdate(
-    { uid: data.uid },
-    {
-      uid: data.uid,
-      email: data.email ?? undefined,
-      username: data.username,
-      provider: data.provider,
-    },
+    query,
+    update,
     { upsert: true, new: true, setDefaultsOnInsert: true },
   );
 }
